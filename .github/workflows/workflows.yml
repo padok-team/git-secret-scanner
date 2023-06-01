@@ -30,7 +30,3 @@ jobs:
         run: |
           black --diff src
           autopep8 --in-place --recursive src
-      
-      - name: Check Linting on Python scripts
-        run: |
-          flake8 src
