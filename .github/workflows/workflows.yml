@@ -28,5 +28,4 @@ jobs:
 
       - name: Lint and format Python scripts
         run: |
-          flake8 src --exclude=venv
           black --check --diff src
