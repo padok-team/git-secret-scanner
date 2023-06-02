@@ -45,10 +45,9 @@ class TrufflehogScanner(Scanner):
             ], stderr=subprocess.DEVNULL)
         except subprocess.CalledProcessError:
             raise Exception('Failed to run trufflehog scan')
-
+        
         if len(scan_results) == 0:
             return []
-
         for secret in scan_results.decode('utf-8').split('\n')[:-1]:
             secret = json.loads(secret)
             result = SecretReport(
