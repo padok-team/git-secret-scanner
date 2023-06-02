@@ -2,6 +2,8 @@
 
 This tool aims to find secrets and credentials in git repositories using the libraries TrufflehogScanner &amp; GitleaksScanner
 
+> :warning: Only works for linux based distribution
+
 ## Why this tool ?
 
 During many pentesting missions, we used the following tools : 
@@ -23,6 +25,11 @@ Here are the required tools to do the installation:
 - [pip](https://pip.pypa.io/en/stable/installation/)
 - [git](https://git-scm.com/book/fr/v2/D%C3%A9marrage-rapide-Installation-de-Git)
 
+Install these tools also :
+
+- [TruffehogScanner](https://github.com/trufflesecurity/trufflehog)
+- [GitleaksScanner](https://github.com/gitleaks/gitleaks)
+
 To test if the tool are correctly installed run the following commands:
 
 ```bash
@@ -30,12 +37,9 @@ To test if the tool are correctly installed run the following commands:
 $ python3 --version
 $ pip --version
 $ git --version
-
-# Windows
-C:> py --version
-C:> py -m pip --version
-C:> git --version
 ```
+
+> You can also try to run the tools TrufflehogScanner (running `trufflehog` command) et GitleaksScanner (running `gitleaks` command).
 
 ## Installation
 
@@ -52,13 +56,9 @@ $ git clone git@github.com:padok-team/git-secret-scanner.git # using ssh
 2. Install the requirements to run the tool
 
 ```bash
-# Linux
+# Linux or MacOS
 $ cd git-secret-scanner
 $ pip install -r requirements.txt
-
-# Windows
-C:> dir git-secret-scanner
-C:> pip install -r requirements.txt
 ```
 
 3. Create a Github access key
@@ -68,11 +68,9 @@ This is for the proper functionning of the tool. You can follow this very clear 
 4. Add your Github access key to your environment variables
 
 ```bash
-# Linux
+# Linux or MacOS
 $ GITHUB_TOKEN=<your_token_value>
-
-# Windows
-C:> set TOKEN=<my_token_value>
+$ export GITHUB_TOKEN
 ```
 
 And it's done, you can see the **Usage** section to run the tool.
