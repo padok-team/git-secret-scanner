@@ -1,1 +1,2 @@
 PyGithub==1.58.0
+python-gitlab==3.14.0

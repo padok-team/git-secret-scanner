@@ -4,7 +4,7 @@ import argparse, threading
 import csv, os, shutil
 from concurrent import futures
 
-from git import GithubResource, GitResource
+from git import GithubResource, GitResource, GitlabResource
 from scanners import TrufflehogScanner, GitleaksScanner
 from secret import SecretReport
 
@@ -20,10 +20,12 @@ def repository_scan(
     destination = f'{folder}/{repository}'
 
     try:
+        # check if repository has already been scanned
         if os.path.exists(destination):
             print('Repository '+repository+' already scanned !')
         else:
-            GithubResource.clone(url, destination)
+            # clone repositories and run the tools
+            GitResource.clone(url, destination)
             trufflehog = TrufflehogScanner(destination, repository)
             trufflehog.scan()
             trufflehog_results = trufflehog.get_results()
@@ -54,25 +56,36 @@ def repository_scan(
 
 
 def run(args: argparse.Namespace) -> None:
+
+    # initialize variables
+    if args.org:
+        organization:    str = args.org
+    elif args.grp:
+        organization:    str = args.grp
+    
     if args.file == None:
-        report_file: str = './reports/'+args.org+'.csv'
+        report_file: str = './reports/'+organization+'.csv'
     else:
         report_file: str = args.file
     
     if args.repo_path == None:
-        repo_path:   str = '/tmp/'+args.org
+        repo_path:   str = '/tmp/'+organization
     else:
         repo_path:   str = args.repo_path
     
-    organization:    str = args.org
     visibility:      str = args.visibility
     no_archived:    bool = args.no_archived
     clean_up:       bool = args.clean_up
 
     print(f'Retrieving {organization} repositories...')
 
-    github = GithubResource(organization)
-    repo_urls = github.get_repository_urls(visibility, no_archived)
+    # call different object if the analyze artefacts are from Github or Gitlab
+    if args.org:
+        github = GithubResource(organization)
+        repo_urls = github.get_repository_urls(visibility, no_archived)
+    elif args.grp:
+        gitlab = GitlabResource(organization)
+        repo_urls = gitlab.get_repository_urls(visibility, no_archived)
 
     # create tmp directory for cloned repositories
     if not os.path.exists(repo_path):
@@ -84,6 +97,7 @@ def run(args: argparse.Namespace) -> None:
 
     print('Launching secret scan (this operation can take a while to complete)...')
     
+    # setup the report file with column
     if not os.path.exists(report_file):
         with open(report_file, 'w') as file:
             csv_writer = csv.writer(file)
@@ -112,8 +126,11 @@ def main() -> None:
 
     parser.add_argument('--org',
         type=str,
-        help='Organization to scan',
-        required=True
+        help='Github organization to scan'
+    )
+    parser.add_argument('--grp',
+        type=str,
+        help='Gitlab group to scan'
     )
     parser.add_argument('-f', '--file',
         type=str,
@@ -139,9 +156,14 @@ def main() -> None:
         action='store_true',
         help='Clean up folder created after scan',
     )
-
+    
     # parse arguments
     args = parser.parse_args()
+
+    # check that there is at least an organization of a group in parameters
+    if not (args.org or args.grp):
+        print("Error: At least one of the arguments --org or --grp must be used.")
+        exit(-1)
     # run script
     run(args)
 
