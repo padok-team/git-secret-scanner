@@ -2,7 +2,7 @@
 
 This tool aims to find secrets and credentials in git repositories using the libraries TrufflehogScanner &amp; GitleaksScanner
 
-> :warning: Only works for linux based distribution
+> :warning: Only works for Debian based distribution and MacOS
 
 ## Why this tool ?
 
