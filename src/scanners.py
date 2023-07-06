@@ -39,7 +39,7 @@ class Scanner():
         raise NotImplementedError('"scan" method not implemented')
 
 
-TrufflehogReportItem = TypedDict('GitLeaksReportItem', {
+TrufflehogReportItem = TypedDict('TrufflehogReportItem', {
     # this is not computed by the type engine since nested typed dict are currently not supported
     'SourceMetadata': {
         'Data': {

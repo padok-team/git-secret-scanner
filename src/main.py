@@ -120,7 +120,7 @@ def run(args: GithubArgs | GitlabArgs, type: ScanType) -> None:
 
     # submit tasks to the thread pool
     for url in repo_urls:
-        pool.submit(repository_scan, url, repo_path, report_file, pool, lock)
+        pool.submit(repository_scan, url, repo_path, args.file, pool, lock)
 
     # wait for all tasks to complete
     pool.shutdown(wait=True)
