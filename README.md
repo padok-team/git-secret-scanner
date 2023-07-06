@@ -1,49 +1,42 @@
 # git-secret-scanner
 
-This tool aims to find secrets and credentials in git repositories using the libraries TrufflehogScanner &amp; GitleaksScanner
+This tool aims to find secrets and credentials in git repositories owned by Organizations or Groups using the libraries [TruffleHog](https://trufflesecurity.com/) &amp; [Gitleaks](https://gitleaks.io/).
 
-> :warning: Only works on Linux and MacOS
+> **Warning**
+> 
+> This tool is only designed for Linux and MacOS.
+> The current version only supports GitLab and GitHub.
 
-## Why this tool ?
+## Why this tool?
 
-During many pentesting missions, we used the following tools : 
-- [TrufflehogScanner](https://github.com/trufflesecurity/trufflehog), a shell tool used to get credentials from git repositories
-- [GitleaksScanner](https://github.com/gitleaks/gitleaks), a tool with the same purpose as the previous one
+Trufflehog and Gitleaks are already designed to find secrets in git repositories. So you may wonder *"what is the purpose of a tool combining both scanners?"* 
 
-So you may ask *"why do we need another tool ? We already have two !"* 
+These two tools have both their own strenghts and weaknesses:
+- TruffleHog is very effective at classifying different secrets, but cannot find them all. It relies on detectors that can easily detect specific types of secrets, but not general secrets or general API keys.
+- Gitleaks is able to find many more secrets, but is not as good as Trufflehog at classification. It contains fewer detectors and relies on string entropy to detect potential secrets that are not found by its detectors.
 
-Well .. during the pentests we did, we found that these two tools have strenght and weaknesses :
-- TrufflehogScanner is very good to categorize the different secrets but doesn't find all of them
-- Gitleaks finds a lot of secrets but sort the biggest majority of them in the same category (often as api key)
-
-So we created this tool which combines the strenght of both previous tools to get all the secrets well categorized.
+We designed this tool to combine the strenghts of both previous tools in order to find as many secrets as possible and to have an efficient classification of these secrets.
 
 ## Requirements
 
-Here are the required tools to do the installation:
-- [python3](https://www.python.org/downloads/)
+`git-secret-scanner` requires the following tools to work:
+- [Python 3](https://www.python.org/downloads/) (>= 3.11)
 - [pip](https://pip.pypa.io/en/stable/installation/)
 - [git](https://git-scm.com/book/fr/v2/D%C3%A9marrage-rapide-Installation-de-Git)
+- [TruffeHog](https://github.com/trufflesecurity/trufflehog) (>= 3.0)
+- [Gitleaks](https://github.com/gitleaks/gitleaks) (>= 8.0)
 
-Install these tools also :
-
-- [TruffehogScanner](https://github.com/trufflesecurity/trufflehog)
-- [GitleaksScanner](https://github.com/gitleaks/gitleaks)
-
-To test if the tool are correctly installed run the following commands:
+You can easily check that all requirements are met with the commands below:
 
 ```bash
-# Linux or MacOS
-$ python3 --version
+$ <python3|python> --version
 $ pip --version
 $ git --version
+$ trufflehog --version
+$ gitleaks version
 ```
 
-> You can also try to run the tools TrufflehogScanner (running `trufflehog` command) et GitleaksScanner (running `gitleaks` command).
-
 ## Installation
-
-Here are the installation steps to use the tool:
 
 1. Clone the repository
 
@@ -51,52 +44,53 @@ Here are the installation steps to use the tool:
 $ git clone https://github.com/padok-team/git-secret-scanner.git # using https
 # or
 $ git clone git@github.com:padok-team/git-secret-scanner.git # using ssh
+$ cd git-secret-scanner
 ```
 
-2. Install the requirements to run the tool
+2. Install the Python requirements to run the tool
 
 ```bash
-# Linux or MacOS
-$ cd git-secret-scanner
 $ pip install -r requirements.txt
 ```
 
-3. Create a Github access key
-
-This is for the proper functionning of the tool. You can follow this very clear [tutorial](https://docs.github.com/en/enterprise-server@3.4/authentication/keeping-your-account-and-data-secure/creating-a-personal-access-token) provided by Github.
-
-4. Add your Github access key to your environment variables
+3. Add the personal access token ([GitHub](https://docs.github.com/en/enterprise-server@3.4/authentication/keeping-your-account-and-data-secure/creating-a-personal-access-token) / [GitLab](https://docs.gitlab.com/ee/user/profile/personal_access_tokens.html)) for your git SaaS in your environment variables:
 
 ```bash
-# Linux or MacOS
-$ GITHUB_TOKEN=<your_token_value>
-$ export GITHUB_TOKEN
+# GitHub
+$ export GITHUB_TOKEN="<token>"
+# GitLab
+$ export GITLAB_TOKEN="<token>"
 ```
-
-And it's done, you can see the **Usage** section to run the tool.
 
 ## Usage
 
-To get information about how to use this tool you can first run `python3 main.py -h`.
+To get detailed usage information about how to use this tool, run 
 
-### Example
+```bash
+python3 main.py -h
+```
 
-Analyze the repositories of the organization *my-org* and write the output in the file *output.csv*: 
+### Examples
+
+#### GitHub
+
+Scan the repositories of the organization *my-org* and write the output in the file *output.csv*: 
 
 ```bash
 $ cd src/ # go in folder with the python files
-$ python3 main.py --org my-org -f output.csv
+$ python3 main.py --org <my-org> -f output.csv
 ```
 
-## Releases
+#### GitLab
 
-The releases must meet these standarts to be approve :
-- [ ] each release is bound to the repository
-- [ ] each release includes a changelog
-- [ ] each release is versioned using [semantic versioning](https://semver.org/)
-- [ ] artefacts are published and served by Github
+Scan the repositories of the group *my-group* and write the output in the file *output.csv*: 
 
-## Questions ?
+```bash
+$ cd src/ # go in folder with the python files
+$ python3 main.py --grp <my-group> -f output.csv
+```
+
+## Questions?
 
 Open an issue to contact us or to give us suggestions. We are open to collaboration!
 
