@@ -1,12 +1,41 @@
 from __future__ import annotations
 
-import argparse, threading
-import csv, os, shutil
-from concurrent import futures
+import enum
 
-from git import GithubResource, GitResource, GitlabResource
+import argparse
+import threading
+from concurrent import futures
+import csv
+import os
+import shutil
+import tempfile
+
+from git import RepositoryVisibility, GitResource, GithubResource, GitlabResource
 from scanners import TrufflehogScanner, GitleaksScanner
 from secret import SecretReport
+
+
+class ScanType(enum.StrEnum):
+    Github = 'github'
+    Gitlab = 'gitlab'
+
+
+class GlobalArgs:
+    scan_type: ScanType
+    file: str
+    visibility: RepositoryVisibility
+    no_archived: bool
+    repo_path: str
+    no_clean_up: bool
+
+class GithubArgs(GlobalArgs):
+    org: str
+
+class GitlabArgs(GlobalArgs):
+    group: str
+
+
+TEMP_DIR_NAME = 'github.padok.git-secret-scanner'
 
 
 def repository_scan(
@@ -55,54 +84,40 @@ def repository_scan(
         print(error)
 
 
-def run(args: argparse.Namespace) -> None:
+def run(args: GithubArgs | GitlabArgs, type: ScanType) -> None:
+    org = ''
+    git_resource: GitResource = None
 
-    # initialize variables
-    if args.org:
-        organization:    str = args.org
-    elif args.grp:
-        organization:    str = args.grp
-    
-    if args.file == None:
-        report_file: str = './reports/'+organization+'.csv'
+    if type == ScanType.Github:
+        org = args.org
+        git_resource = GithubResource(org)
+    elif type == ScanType.Gitlab:
+        org = args.group
+        git_resource = GitlabResource(org)
     else:
-        report_file: str = args.file
-    
-    if args.repo_path == None:
-        repo_path:   str = '/tmp/'+organization
-    else:
-        repo_path:   str = args.repo_path
-    
-    visibility:      str = args.visibility
-    no_archived:    bool = args.no_archived
-    clean_up:       bool = args.clean_up
+        raise AttributeError(f'Unknown scan type {type}')
 
-    print(f'Retrieving {organization} repositories...')
+    print(f'Retrieving {org} repositories...')
 
-    # call different object if the analyze artefacts are from Github or Gitlab
-    if args.org:
-        github = GithubResource(organization)
-        repo_urls = github.get_repository_urls(visibility, no_archived)
-    elif args.grp:
-        gitlab = GitlabResource(organization)
-        repo_urls = gitlab.get_repository_urls(visibility, no_archived)
+    repo_urls = git_resource.get_repository_urls(args.visibility, args.no_archived)
 
     # create tmp directory for cloned repositories
+    repo_path = args.repo_path if args.repo_path else f'{tempfile.gettempdir()}/{TEMP_DIR_NAME}/{org}'
     if not os.path.exists(repo_path):
         os.makedirs(repo_path)
-    
+
     # setup multithreading
     lock = threading.Lock()
     pool = futures.ThreadPoolExecutor(max_workers=5)
 
     print('Launching secret scan (this operation can take a while to complete)...')
-    
+
     # setup the report file with column
-    if not os.path.exists(report_file):
-        with open(report_file, 'w') as file:
-            csv_writer = csv.writer(file)
+    if not os.path.exists(args.file):
+        with open(args.file, 'w') as report_file:
+            csv_writer = csv.writer(report_file)
             csv_writer.writerow(['repository', 'path', 'kind', 'line', 'valid', 'cleartext', 'hash'])
-    
+
     # submit tasks to the thread pool
     for url in repo_urls:
         pool.submit(repository_scan, url, repo_path, report_file, pool, lock)
@@ -110,63 +125,68 @@ def run(args: argparse.Namespace) -> None:
     # wait for all tasks to complete
     pool.shutdown(wait=True)
 
-    # delete dir
-    if clean_up == True:
-        print('Cleaning folder with cloned repositories...')
+    # delete cloned repositories when cleanup is enabled
+    if not args.no_clean_up:
+        print('Cleaning cloned repositories...')
         shutil.rmtree(repo_path)
 
-    print('Report available !')
-    # graceful shutdown
-    exit(0)
 
+def cli() -> None:
+    def add_global_arguments(parser: argparse.ArgumentParser):
+        parser.add_argument('-f', '--file',
+            type=str,
+            default='report.csv',
+            help='path to the CSV report file to generate',
+        )
+        parser.add_argument('-v', '--visibility',
+            type=str,
+            default='all',
+            choices=['all', 'private', 'public'],
+            help='repositories visibility',
+        )
+        parser.add_argument('--no-archived',
+            default=False,
+            action='store_true',
+            help='do not scan archived repositories',
+        )
+        parser.add_argument('--repo-path',
+            type=str,
+            help='folder path to store repositories',
+        )
+        parser.add_argument('--no-clean-up',
+            default=False,
+            action='store_true',
+            help='do not clean repositories downloaded after the scan',
+        )
 
-def main() -> None:
-    description = 'Scan secrets in organization repositories'
-    parser = argparse.ArgumentParser(description=description)
+    parser = argparse.ArgumentParser(description='Scan secrets in organization repositories')
+    subparsers = parser.add_subparsers(required=True, dest='git_software')
 
-    parser.add_argument('--org',
+    # GitHub
+    github_parser = subparsers.add_parser(ScanType.Github, help='scan a GitHub organization')
+    github_parser.add_argument('-o', '--org',
         type=str,
-        help='Github organization to scan'
+        required=True,
+        help='organization to scan'
     )
-    parser.add_argument('--grp',
+    add_global_arguments(github_parser)
+
+    # GitLab
+    gitlab_parser = subparsers.add_parser(ScanType.Gitlab, help='scan a GitLab group')
+    gitlab_parser.add_argument('-o', '--group',
         type=str,
-        help='Gitlab group to scan'
+        required=True,
+        help='group to scan'
     )
-    parser.add_argument('-f', '--file',
-        type=str,
-        help='Path to the CSV report file to generate',
-    )
-    parser.add_argument('-v', '--visibility',
-        type=str,
-        default='all',
-        choices=['all', 'private', 'public'],
-        help='Repositories visibility',
-    )
-    parser.add_argument('--no-archived',
-        default=False,
-        action='store_true',
-        help='Do not scan archived repositories',
-    )
-    parser.add_argument('--repo-path',
-        type=str,
-        help='Folder path to store repositories',
-    )
-    parser.add_argument('--clean-up',
-        default=False,
-        action='store_true',
-        help='Clean up folder created after scan',
-    )
-    
+    add_global_arguments(gitlab_parser)
+
     # parse arguments
-    args = parser.parse_args()
+    args = GlobalArgs()
+    parser.parse_args(namespace=args)
 
-    # check that there is at least an organization of a group in parameters
-    if not (args.org or args.grp):
-        print("Error: At least one of the arguments --org or --grp must be used.")
-        exit(-1)
     # run script
-    run(args)
+    run(args, args.scan_type)
 
 
 if __name__ == '__main__':
-    main()
+    cli()

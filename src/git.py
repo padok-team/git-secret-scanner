@@ -1,6 +1,16 @@
+from __future__ import annotations
+
+import enum
+
 import os, subprocess
 from github import Github
 from gitlab import Gitlab
+
+
+class RepositoryVisibility(enum.StrEnum):
+    All = 'all'
+    Private = 'private'
+    Public = 'public'
 
 
 class GitResource():
@@ -19,7 +29,7 @@ class GitResource():
 
 
 class GithubResource(GitResource):
-    def get_repository_urls(self, visibility='all', no_archived=False) -> str:
+    def get_repository_urls(self, visibility='all', no_archived=False) -> list[str]:
         if visibility not in ['all', 'private', 'public']:
             raise AttributeError('Wrong visibility argument')
 
@@ -37,8 +47,9 @@ class GithubResource(GitResource):
 
         return repository_urls
 
+
 class GitlabResource(GitResource):
-    def get_repository_urls(self, visibility='all', no_archived=False) -> str:
+    def get_repository_urls(self, visibility='all', no_archived=False) -> list[str]:
         if visibility not in ['all', 'private', 'public']:
             raise AttributeError('Wrong visibility argument')
 
@@ -71,4 +82,3 @@ class GitlabResource(GitResource):
             repository_urls = [x for x in repository_urls if x not in [y for y in tmp]]
 
         return repository_urls
-
