@@ -40,4 +40,4 @@ class SecretReport():
                 valid=(first.valid if first.valid is not None else second.valid),
                 cleartext=first.cleartext,
             )
-        raise AttributeError('Non equals secrets cannot be merged')
+        raise AttributeError('Non equal secrets cannot be merged')

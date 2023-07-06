@@ -24,13 +24,13 @@ class GitResource():
         except subprocess.CalledProcessError:
             raise Exception('Failed to clone repository')
 
-    def get_repository_urls(self, visibility='all', no_archived=False) -> str:
+    def get_repository_urls(self, visibility=RepositoryVisibility.All, no_archived=False) -> str:
         raise NotImplementedError('"get_repository_urls" method not implemented')
 
 
 class GithubResource(GitResource):
-    def get_repository_urls(self, visibility='all', no_archived=False) -> list[str]:
-        if visibility not in ['all', 'private', 'public']:
+    def get_repository_urls(self, visibility=RepositoryVisibility.All, no_archived=False) -> list[str]:
+        if visibility not in RepositoryVisibility:
             raise AttributeError('Wrong visibility argument')
 
         # check GITHUB_TOKEN variable
@@ -49,8 +49,8 @@ class GithubResource(GitResource):
 
 
 class GitlabResource(GitResource):
-    def get_repository_urls(self, visibility='all', no_archived=False) -> list[str]:
-        if visibility not in ['all', 'private', 'public']:
+    def get_repository_urls(self, visibility=RepositoryVisibility.All, no_archived=False) -> list[str]:
+        if visibility not in RepositoryVisibility:
             raise AttributeError('Wrong visibility argument')
 
         # define visibility

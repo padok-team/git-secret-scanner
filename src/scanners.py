@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+from typing import TypedDict
+
 import os, subprocess
 import json
 
@@ -37,6 +39,20 @@ class Scanner():
         raise NotImplementedError('"scan" method not implemented')
 
 
+TrufflehogReportItem = TypedDict('GitLeaksReportItem', {
+    # this is not computed by the type engine since nested typed dict are currently not supported
+    'SourceMetadata': {
+        'Data': {
+            'Filesystem': {
+                'file': str,
+            },
+        },
+    },
+    'DetectorName': str,
+    'Verified': bool,
+    'Raw': str,
+})
+
 class TrufflehogScanner(Scanner):
     def scan(self) -> None:
         try:
@@ -49,7 +65,7 @@ class TrufflehogScanner(Scanner):
         if len(scan_results) == 0:
             return []
         for secret in scan_results.decode('utf-8').split('\n')[:-1]:
-            secret = json.loads(secret)
+            secret: TrufflehogReportItem = json.loads(secret)
             result = SecretReport(
                 repository=self.repository,
                 path=secret['SourceMetadata']['Data']['Filesystem']['file'].removeprefix(f'{self.directory}/'),
@@ -59,6 +75,16 @@ class TrufflehogScanner(Scanner):
                 cleartext=secret['Raw'],
             )
             self._results.append(result)
+
+
+GitleaksReportItem = TypedDict('GitleaksReportItem', {
+    'RuleID': str,
+    'File': str,
+    'StartLine': int,
+    'Secret': str,
+})
+
+GitleaksReport = list[GitleaksReportItem]
 
 
 class GitleaksScanner(Scanner):
@@ -79,7 +105,7 @@ class GitleaksScanner(Scanner):
         if len(scan_results) == 0:
             return []
 
-        scan_results = json.loads(scan_results)
+        scan_results: GitleaksReport = json.loads(scan_results)
 
         for secret in scan_results:
             result = SecretReport(
