@@ -29,7 +29,7 @@ We designed this tool to combine the strenghts of both previous tools in order t
 You can easily check that all requirements are met with the commands below:
 
 ```bash
-$ <python3|python> --version
+$ python --version
 $ pip --version
 $ git --version
 $ trufflehog --version
@@ -67,7 +67,7 @@ $ export GITLAB_TOKEN="<token>"
 To get detailed usage information about how to use this tool, run 
 
 ```bash
-python3 main.py -h
+python src/cli.py --help
 ```
 
 ### Examples
@@ -77,8 +77,7 @@ python3 main.py -h
 Scan the repositories of the organization *my-org* and write the output in the file *output.csv*: 
 
 ```bash
-$ cd src/ # go in folder with the python files
-$ python3 main.py --org <my-org> -f output.csv
+$ python src/cli.py github -o <my-org>
 ```
 
 #### GitLab
@@ -86,8 +85,7 @@ $ python3 main.py --org <my-org> -f output.csv
 Scan the repositories of the group *my-group* and write the output in the file *output.csv*: 
 
 ```bash
-$ cd src/ # go in folder with the python files
-$ python3 main.py --grp <my-group> -f output.csv
+$ python src/cli.py gitlab -o <my-org>
 ```
 
 ## Questions?
