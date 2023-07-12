@@ -35,7 +35,7 @@ def github(
     visibility: Annotated[RepositoryVisibility, visibility_option] = RepositoryVisibility.All,
     no_archived: Annotated[bool, no_archived_option] = False,
     file: Annotated[str, file_option] = 'report.csv',
-    repo_path: Annotated[str, repo_path_option] = None,
+    repo_path: Annotated[str, repo_path_option] = '',
     no_clean_up: Annotated[bool, no_clean_up_option] = False,
 ):
     context = ScanContext()
@@ -58,7 +58,7 @@ def gitlab(
     visibility: Annotated[RepositoryVisibility, visibility_option] = RepositoryVisibility.All,
     no_archived: Annotated[bool, no_archived_option] = False,
     file: Annotated[str, file_option] = 'report.csv',
-    repo_path: Annotated[str, repo_path_option] = None,
+    repo_path: Annotated[str, repo_path_option] = '',
     no_clean_up: Annotated[bool, no_clean_up_option] = False,
 ):
     context = ScanContext()

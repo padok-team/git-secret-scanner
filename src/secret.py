@@ -4,7 +4,7 @@ import hashlib
 
 
 class SecretReport():
-    def __init__(self, repository: str, path: str, kind: str, line: str | None, valid: bool | None, cleartext: str) -> None:
+    def __init__(self, repository: str, path: str, kind: str, line: int | None, valid: bool | None, cleartext: str) -> None:
         self.repository = repository
         self.path = path
         self.kind = kind

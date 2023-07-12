@@ -1,4 +1,4 @@
-from typing import Callable
+from typing import Callable, Any
 import enum
 
 import threading
@@ -75,7 +75,7 @@ def repository_scan(
         print(error)
 
 
-def task_with_progress_spiner(description: str, task: Callable) -> any:
+def task_with_progress_spiner(description: str, task: Callable) -> Any:
     with Progress(SpinnerColumn(), TextColumn('[progress.description]{task.description}')) as progress:
         progress.add_task(description=description, total=None)
         result = task()
@@ -90,7 +90,7 @@ def run_scan(context: ScanContext, git_resource: GitResource) -> None:
     )
 
     # create tmp directory for cloned repositories
-    repo_path = context.repo_path if context.repo_path else f'{tempfile.gettempdir()}/{TEMP_DIR_NAME}/{git_resource.organization}'
+    repo_path = context.repo_path if context.repo_path == '' else f'{tempfile.gettempdir()}/{TEMP_DIR_NAME}/{git_resource.organization}'
     if not os.path.exists(repo_path):
         os.makedirs(repo_path)
 
