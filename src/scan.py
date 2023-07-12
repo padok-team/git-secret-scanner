@@ -66,7 +66,15 @@ def repository_scan(
             with open(report_file, 'a') as file:
                 csv_writer = csv.writer(file)
                 for result in results:
-                    csv_writer.writerow([result.repository, result.path, result.kind, result.line, result.valid, result.cleartext, result.hash])
+                    csv_writer.writerow([
+                        result.repository,
+                        result.path,
+                        result.kind,
+                        result.line,
+                        result.valid,
+                        result.cleartext,
+                        result.hash,
+                    ])
             lock.release()
     except Exception as error:
         # shutdown the whole pool if we catch an error
@@ -76,7 +84,7 @@ def repository_scan(
 
 
 def task_with_progress_spiner(description: str, task: Callable) -> Any:
-    with Progress(SpinnerColumn(), TextColumn('[progress.description]{task.description}')) as progress:
+    with Progress(SpinnerColumn(), TextColumn('[progress.description]{task.description}')) as progress:  # noqa: E501
         progress.add_task(description=description, total=None)
         result = task()
     return result
@@ -90,7 +98,10 @@ def run_scan(context: ScanContext, git_resource: GitResource) -> None:
     )
 
     # create tmp directory for cloned repositories
-    repo_path = context.repo_path if context.repo_path == '' else f'{tempfile.gettempdir()}/{TEMP_DIR_NAME}/{git_resource.organization}'
+    repo_path = context.repo_path
+    if repo_path == '':
+        repo_path = f'{tempfile.gettempdir()}/{TEMP_DIR_NAME}/{git_resource.organization}'
+
     if not os.path.exists(repo_path):
         os.makedirs(repo_path)
 
@@ -102,7 +113,15 @@ def run_scan(context: ScanContext, git_resource: GitResource) -> None:
     if not os.path.exists(context.file):
         with open(context.file, 'w') as report_file:
             csv_writer = csv.writer(report_file)
-            csv_writer.writerow(['repository', 'path', 'kind', 'line', 'valid', 'cleartext', 'hash'])
+            csv_writer.writerow([
+                'repository',
+                'path',
+                'kind',
+                'line',
+                'valid',
+                'cleartext',
+                'hash',
+            ])
 
     with Progress() as progress:
         task = progress.add_task("Scanning repositories...", total=len(repo_urls))
@@ -117,4 +136,7 @@ def run_scan(context: ScanContext, git_resource: GitResource) -> None:
 
     # delete cloned repositories when cleanup is enabled
     if not context.no_clean_up:
-        task_with_progress_spiner('Cleaning cloned repositories...', lambda: shutil.rmtree(repo_path))
+        task_with_progress_spiner(
+            'Cleaning cloned repositories...',
+            lambda: shutil.rmtree(repo_path),
+        )

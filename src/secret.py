@@ -4,7 +4,15 @@ import hashlib
 
 
 class SecretReport():
-    def __init__(self, repository: str, path: str, kind: str, line: int | None, valid: bool | None, cleartext: str) -> None:
+    def __init__(
+        self,
+        repository: str,
+        path: str,
+        kind: str,
+        line: int | None,
+        valid: bool | None,
+        cleartext: str,
+    ) -> None:
         self.repository = repository
         self.path = path
         self.kind = kind
@@ -18,16 +26,30 @@ class SecretReport():
 
     def __eq__(self, other) -> bool:
         if not isinstance(other, type(self)):
-            raise NotImplemented
+            raise NotImplementedError
         return self.repository == other.repository \
             and self.path == other.path \
             and self.hash == other.hash
 
     def __str__(self) -> str:
-        return f'SecretReport{{repository={self.repository},path={self.path},kind={self.kind},line={self.line},valid={self.valid},cleartext{self.cleartext},hash={self.hash}}}'
+        return f'SecretReport{{ \
+            repository={self.repository}, \
+            path={self.path}, \
+            kind={self.kind}, \
+            line={self.line}, \
+            valid={self.valid}, \
+            cleartext{self.cleartext}, \
+            hash={self.hash}}}'
 
     def __repr__(self) -> str:
-        return f'SecretReport{{repository={self.repository},path={self.path},kind={self.kind},line={self.line},valid={self.valid},cleartext{self.cleartext},hash={self.hash}}}'
+        return f'SecretReport{{ \
+            repository={self.repository}, \
+            path={self.path}, \
+            kind={self.kind}, \
+            line={self.line}, \
+            valid={self.valid}, \
+            cleartext{self.cleartext}, \
+            hash={self.hash}}}'
 
     @staticmethod
     def merge(first: SecretReport, second: SecretReport) -> SecretReport:

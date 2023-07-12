@@ -2,7 +2,8 @@ from __future__ import annotations
 
 from typing import TypedDict, Any
 
-import os, subprocess
+import os
+import subprocess
 import json
 
 from secret import SecretReport
@@ -90,9 +91,16 @@ class GitleaksScanner(Scanner):
 
         try:
             subprocess.call([
-                'gitleaks', 'detect', '--no-git', '-s', self.directory, '-f', 'json', '--exit-code', '0', '-r', report_path,
+                'gitleaks', 'detect',
+                    '--no-git',
+                    '--source', self.directory,
+                    '--report-format', 'json',
+                    '--report-path', report_path,
+                    '--exit-code', '0',
             ], stderr=subprocess.DEVNULL)
-            raw_scan_results = subprocess.check_output(['cat', report_path], stderr=subprocess.DEVNULL)
+            raw_scan_results = subprocess.check_output([
+                'cat', report_path
+            ], stderr=subprocess.DEVNULL)
         except subprocess.CalledProcessError:
             raise Exception('Failed to run gitleaks scan')
 

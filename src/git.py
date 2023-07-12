@@ -2,7 +2,8 @@ from __future__ import annotations
 
 import enum
 
-import os, subprocess
+import os
+import subprocess
 from github import Github
 from gitlab import Gitlab
 
