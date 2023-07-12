@@ -4,9 +4,19 @@ on:
   push:
     branches:
       - main
+    paths:
+      - 'src/**'
+      - pyrightconfig.json
+      - ruff.toml
+      - .github/workflows/workflows.yml
   pull_request:
     branches:
       - main
+    paths:
+      - 'src/**'
+      - pyrightconfig.json
+      - ruff.toml
+      - .github/workflows/workflows.yml
 
 jobs:
   lint-and-format:
