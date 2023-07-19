@@ -1,6 +1,9 @@
 from __future__ import annotations
 
-import os, subprocess
+from typing import TypedDict, Any
+
+import os
+import subprocess
 import json
 
 from secret import SecretReport
@@ -32,10 +35,17 @@ class Scanner():
 
     def get_results(self) -> list[SecretReport]:
         return self._results
-    
+
     def scan(self) -> None:
         raise NotImplementedError('"scan" method not implemented')
 
+
+TrufflehogReportItem = TypedDict('TrufflehogReportItem', {
+    'SourceMetadata': Any,
+    'DetectorName': str,
+    'Verified': bool,
+    'Raw': str,
+})
 
 class TrufflehogScanner(Scanner):
     def scan(self) -> None:
@@ -45,11 +55,12 @@ class TrufflehogScanner(Scanner):
             ], stderr=subprocess.DEVNULL)
         except subprocess.CalledProcessError:
             raise Exception('Failed to run trufflehog scan')
-        
+
         if len(scan_results) == 0:
-            return []
-        for secret in scan_results.decode('utf-8').split('\n')[:-1]:
-            secret = json.loads(secret)
+            return
+
+        for raw_secret in scan_results.decode('utf-8').split('\n')[:-1]:
+            secret: TrufflehogReportItem = json.loads(raw_secret)
             result = SecretReport(
                 repository=self.repository,
                 path=secret['SourceMetadata']['Data']['Filesystem']['file'].removeprefix(f'{self.directory}/'),
@@ -61,6 +72,16 @@ class TrufflehogScanner(Scanner):
             self._results.append(result)
 
 
+GitleaksReportItem = TypedDict('GitleaksReportItem', {
+    'RuleID': str,
+    'File': str,
+    'StartLine': int,
+    'Secret': str,
+})
+
+GitleaksReport = list[GitleaksReportItem]
+
+
 class GitleaksScanner(Scanner):
     def __map_rule(self, rule: str) -> str:
         return GITLEAKS_TO_TRUFFLEHOG[rule] if rule in GITLEAKS_TO_TRUFFLEHOG else rule
@@ -70,16 +91,23 @@ class GitleaksScanner(Scanner):
 
         try:
             subprocess.call([
-                'gitleaks', 'detect', '--no-git', '-s', self.directory, '-f', 'json', '--exit-code', '0', '-r', report_path,
+                'gitleaks', 'detect',
+                    '--no-git',
+                    '--source', self.directory,
+                    '--report-format', 'json',
+                    '--report-path', report_path,
+                    '--exit-code', '0',
             ], stderr=subprocess.DEVNULL)
-            scan_results = subprocess.check_output(['cat', report_path], stderr=subprocess.DEVNULL)
+            raw_scan_results = subprocess.check_output([
+                'cat', report_path
+            ], stderr=subprocess.DEVNULL)
         except subprocess.CalledProcessError:
             raise Exception('Failed to run gitleaks scan')
 
-        if len(scan_results) == 0:
-            return []
+        if len(raw_scan_results) == 0:
+            return
 
-        scan_results = json.loads(scan_results)
+        scan_results: GitleaksReport = json.loads(raw_scan_results)
 
         for secret in scan_results:
             result = SecretReport(
