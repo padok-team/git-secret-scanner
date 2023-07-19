@@ -9,9 +9,9 @@ import shutil
 import tempfile
 from rich.progress import Progress, SpinnerColumn, TextColumn
 
-from git import GitResource
-from scanners import TrufflehogScanner, GitleaksScanner
-from secret import SecretReport
+from git_secret_scanner.git import GitResource
+from git_secret_scanner.scanners import TrufflehogScanner, GitleaksScanner
+from git_secret_scanner.secret import SecretReport
 
 
 TEMP_DIR_NAME = 'github.padok.git-secret-scanner'
