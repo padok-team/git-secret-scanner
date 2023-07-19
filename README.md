@@ -38,6 +38,25 @@ $ gitleaks version
 
 ## Installation
 
+### Using `pip`
+
+The simplest way to install `git-secret-scanner` is with `pip`.
+
+```bash
+$ pip install git-secret-sccanner
+```
+
+Then export your personal access token for ([GitHub](https://docs.github.com/en/enterprise-server@3.4/authentication/keeping-your-account-and-data-secure/creating-a-personal-access-token) or [GitLab](https://docs.gitlab.com/ee/user/profile/personal_access_tokens.html)):
+
+```bash
+# GitHub
+$ export GITHUB_TOKEN="<token>"
+# GitLab
+$ export GITLAB_TOKEN="<token>"
+```
+
+### From source
+
 1. Clone the repository
 
 ```bash
@@ -53,7 +72,7 @@ $ cd git-secret-scanner
 $ pip install -r requirements.txt
 ```
 
-3. Add the personal access token ([GitHub](https://docs.github.com/en/enterprise-server@3.4/authentication/keeping-your-account-and-data-secure/creating-a-personal-access-token) / [GitLab](https://docs.gitlab.com/ee/user/profile/personal_access_tokens.html)) for your git SaaS in your environment variables:
+3. Add your personal access token ([GitHub](https://docs.github.com/en/enterprise-server@3.4/authentication/keeping-your-account-and-data-secure/creating-a-personal-access-token) / [GitLab](https://docs.gitlab.com/ee/user/profile/personal_access_tokens.html)) for your git SaaS in your environment variables:
 
 ```bash
 # GitHub
@@ -67,7 +86,7 @@ $ export GITLAB_TOKEN="<token>"
 To get detailed usage information about how to use this tool, run 
 
 ```bash
-python src/cli.py --help
+$ git-secret-sccanner --help
 ```
 
 ### Examples
@@ -77,7 +96,7 @@ python src/cli.py --help
 Scan the repositories of the organization *my-org* and write the output in the file *output.csv*: 
 
 ```bash
-$ python src/cli.py github -o <my-org>
+$ git-secret-sccanner github -o <my-org>
 ```
 
 #### GitLab
@@ -85,7 +104,7 @@ $ python src/cli.py github -o <my-org>
 Scan the repositories of the group *my-group* and write the output in the file *output.csv*: 
 
 ```bash
-$ python src/cli.py gitlab -o <my-org>
+$ git-secret-sccanner gitlab -o <my-org>
 ```
 
 ## Questions?
