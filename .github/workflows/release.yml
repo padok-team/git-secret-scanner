@@ -1,9 +1,10 @@
 name: Release
 
 on:
-  release:
-    types:
-      - published
+  pull_request:
+  # release:
+  #   types:
+  #     - published
 
 jobs:
   build:
@@ -22,7 +23,8 @@ jobs:
         run: pip install hatch
       
       - name: 🚀 Update package version
-        run: hatch version "${{ github.event.release.tag_name }}"
+        # run: hatch version "${{ github.event.release.tag_name }}"
+        run: hatch version v0.1.1
 
       - name: ⚙️ Build binary wheel and source tarball
         run: hatch build
@@ -36,6 +38,8 @@ jobs:
           retention-days: 1
 
   publish:
+    needs: build
+
     runs-on: ubuntu-latest
     
     permissions:
