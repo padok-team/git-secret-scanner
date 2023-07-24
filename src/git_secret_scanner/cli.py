@@ -12,7 +12,9 @@ pretty_debug = True if os.environ.get('PRETTY_DEBUG') in ['1', 'True'] else Fals
 cli = typer.Typer(pretty_exceptions_enable=pretty_debug)
 
 
-visibility_option = typer.Option(help='Repositories visibility')
+visibility_option = typer.Option('--visibility', '-v',
+    help='Repositories visibility',
+)
 no_archived_option = typer.Option('--no-archived',
     help='Do not scan archived repositories',
 )
