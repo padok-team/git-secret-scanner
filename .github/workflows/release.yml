@@ -1,10 +1,9 @@
 name: Release
 
 on:
-  pull_request:
-  # release:
-  #   types:
-  #     - published
+  release:
+    types:
+      - published
 
 jobs:
   build:
@@ -23,13 +22,12 @@ jobs:
         run: pip install hatch
       
       - name: 🚀 Update package version
-        # run: hatch version "${{ github.event.release.tag_name }}"
-        run: hatch version v0.1.1
+        run: hatch version "${{ github.event.release.tag_name }}"
 
       - name: ⚙️ Build binary wheel and source tarball
         run: hatch build
 
-      - name: ⬆ Upload build artifact
+      - name: 📤 Upload build artifact
         uses: actions/upload-artifact@v3
         with:
           name: dist
@@ -46,17 +44,11 @@ jobs:
       id-token: write
     
     steps:
-      - name: ⬇ Download build artifact
+      - name: 📥 Download build artifact
         uses: actions/download-artifact@v3
         with:
           name: dist
           path: dist
 
-      # - name: 🚀 Publish package to PyPI
-      #   uses: pypa/gh-action-pypi-publish@release/v1
-
-      # Upload to test pypi for now
-      - name: 🚀 Publish package to Test PyPI
+      - name: 🚀 Publish package to PyPI
         uses: pypa/gh-action-pypi-publish@release/v1
-        with:
-          repository-url: https://test.pypi.org/legacy/
