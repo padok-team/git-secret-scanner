@@ -1,15 +1,20 @@
 from typing_extensions import Annotated
 
+import os
 import typer
 
-from git import RepositoryVisibility, GithubResource, GitlabResource
-from scan import ScanContext, ScanType, run_scan
+from git_secret_scanner.git import RepositoryVisibility, GithubResource, GitlabResource
+from git_secret_scanner.scan import ScanContext, ScanType, run_scan
 
 
-cli = typer.Typer()
+pretty_debug = True if os.environ.get('PRETTY_DEBUG') in ['1', 'True'] else False
+
+cli = typer.Typer(pretty_exceptions_enable=pretty_debug)
 
 
-visibility_option = typer.Option(help='Repositories visibility')
+visibility_option = typer.Option('--visibility', '-v',
+    help='Repositories visibility',
+)
 no_archived_option = typer.Option('--no-archived',
     help='Do not scan archived repositories',
 )

@@ -1,0 +1,54 @@
+name: Release
+
+on:
+  release:
+    types:
+      - published
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: 🔍 Checkout repository
+        uses: actions/checkout@v3
+
+      - name: 📦 Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: 3.11.4
+
+      - name: 📦 Install build dependencies
+        run: pip install hatch
+      
+      - name: 🚀 Update package version
+        run: hatch version "${{ github.event.release.tag_name }}"
+
+      - name: ⚙️ Build binary wheel and source tarball
+        run: hatch build
+
+      - name: 📤 Upload build artifact
+        uses: actions/upload-artifact@v3
+        with:
+          name: dist
+          path: dist
+          if-no-files-found: error
+          retention-days: 1
+
+  publish:
+    needs: build
+
+    runs-on: ubuntu-latest
+    
+    permissions:
+      id-token: write
+    
+    steps:
+      - name: 📥 Download build artifact
+        uses: actions/download-artifact@v3
+        with:
+          name: dist
+          path: dist
+
+      - name: 🚀 Publish package to PyPI
+        uses: pypa/gh-action-pypi-publish@release/v1

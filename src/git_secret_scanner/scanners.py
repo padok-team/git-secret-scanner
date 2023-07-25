@@ -6,7 +6,7 @@ import os
 import subprocess
 import json
 
-from secret import SecretReport
+from git_secret_scanner.secret import SecretReport
 
 
 GITLEAKS_TO_TRUFFLEHOG = {

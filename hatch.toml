@@ -1,0 +1,22 @@
+[version]
+path = "src/git_secret_scanner/__init__.py"
+
+[build]
+exclude = [".github"]
+
+[build.targets.wheel]
+packages = ["src/git_secret_scanner"]
+
+[envs.default]
+dependencies = [
+  "pyright",
+  "ruff",
+]
+
+[envs.default.env-vars]
+PRETTY_DEBUG = "1"
+
+[envs.default.scripts]
+typecheck = "pyright {args}"
+lint = "ruff {args:.}"
+start = "python src/git_secret_scanner/cli.py {args}"

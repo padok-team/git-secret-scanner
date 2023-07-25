@@ -1,4 +1,4 @@
-name: Python Linting and Formatting
+name: Type checking and linting
 
 on:
   push:
@@ -9,7 +9,7 @@ on:
       - main
 
 jobs:
-  lint-and-format:
+  lint:
     runs-on: ubuntu-latest
 
     steps:
@@ -23,11 +23,11 @@ jobs:
 
       - name: Install dependencies
         run: |
-          pip install pyright ruff
+          pip install hatch
           pip install -r requirements.txt
 
       - name: Type checking
-        run: pyright
+        run: hatch run typecheck
 
       - name: Linting
-        run: ruff check .
+        run: hatch run lint

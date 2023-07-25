@@ -1,0 +1,40 @@
+[project]
+name = "git-secret-scanner"
+authors = [{ name = "Padok" }]
+description = "Find secrets in git repositories with TruffleHog & Gitleaks"
+readme = "README.md"
+requires-python = ">=3.11"
+license = "Apache-2.0"
+dependencies = [
+    "PyGithub ~= 1.59.0",
+    "python-gitlab ~= 3.15.0",
+    "typer ~= 0.9.0",
+    "rich ~= 13.4.2",
+]
+classifiers = [
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.11",
+    "Operating System :: MacOS",
+    "Operating System :: POSIX :: Linux",
+    "Intended Audience :: Developers",
+    "Intended Audience :: System Administrators",
+    "License :: OSI Approved :: Apache Software License",
+]
+keywords = [
+  "secret",
+  "scan",
+  "git",
+  "security",
+]
+dynamic = ["version"]
+
+[project.scripts]
+git-secret-scanner = "git_secret_scanner.cli:cli"
+
+[project.urls]
+Homepage = "https://github.com/padok-team/git-secret-scanner"
+Repository = "https://github.com/padok-team/git-secret-scanner"
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
