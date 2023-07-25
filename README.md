@@ -43,7 +43,7 @@ $ gitleaks version
 The simplest way to install `git-secret-scanner` is with `pip`.
 
 ```bash
-$ pip install git-secret-sccanner
+$ pip install git-secret-scanner
 ```
 
 Then export your personal access token for ([GitHub](https://docs.github.com/en/enterprise-server@3.4/authentication/keeping-your-account-and-data-secure/creating-a-personal-access-token) or [GitLab](https://docs.gitlab.com/ee/user/profile/personal_access_tokens.html)):
@@ -86,7 +86,7 @@ $ export GITLAB_TOKEN="<token>"
 To get detailed usage information about how to use this tool, run 
 
 ```bash
-$ git-secret-sccanner --help
+$ git-secret-scanner --help
 ```
 
 ### Examples
@@ -96,7 +96,7 @@ $ git-secret-sccanner --help
 Scan the repositories of the organization *my-org* and write the output in the file *output.csv*: 
 
 ```bash
-$ git-secret-sccanner github -o <my-org>
+$ git-secret-scanner github -o <my-org>
 ```
 
 #### GitLab
@@ -104,7 +104,7 @@ $ git-secret-sccanner github -o <my-org>
 Scan the repositories of the group *my-group* and write the output in the file *output.csv*: 
 
 ```bash
-$ git-secret-sccanner gitlab -o <my-org>
+$ git-secret-scanner gitlab -o <my-org>
 ```
 
 ## Questions?
