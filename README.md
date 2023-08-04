@@ -23,7 +23,7 @@ We designed this tool to combine the strenghts of both previous tools in order t
 - [Python 3](https://www.python.org/downloads/) (>= 3.11)
 - [pip](https://pip.pypa.io/en/stable/installation/)
 - [git](https://git-scm.com/book/fr/v2/D%C3%A9marrage-rapide-Installation-de-Git)
-- [TruffeHog](https://github.com/trufflesecurity/trufflehog) (>= 3.0)
+- [TruffleHog](https://github.com/trufflesecurity/trufflehog) (>= 3.0)
 - [Gitleaks](https://github.com/gitleaks/gitleaks) (>= 8.0)
 
 You can easily check that all requirements are met with the commands below:
