@@ -1,8 +1,10 @@
 from typing_extensions import Annotated
 
 import os
+import shutil
 import typer
 
+from git_secret_scanner.console import print_error_and_fail
 from git_secret_scanner.git import RepositoryVisibility, GithubResource, GitlabResource
 from git_secret_scanner.scan import ScanContext, ScanType, run_scan
 
@@ -29,6 +31,13 @@ repo_path_option = typer.Option('--repo-path', '-p',
 no_clean_up_option = typer.Option('--no-clean-up',
     help='Do not clean up repositories downloaded after the scan',
 )
+
+
+@cli.callback()
+def test_required_tools():
+    for tool in ['git', 'trufflehog', 'gitleaks']:
+        if shutil.which(tool) is None:
+            print_error_and_fail(f'Required tool missing: {tool} is not installed')
 
 
 @cli.command(help='Scan secrets in a GitHub organization\'s repositories')
