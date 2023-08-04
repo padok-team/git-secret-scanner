@@ -9,6 +9,7 @@ import shutil
 import tempfile
 from rich.progress import Progress, SpinnerColumn, TextColumn
 
+from git_secret_scanner.console import print_error_and_fail
 from git_secret_scanner.git import GitResource
 from git_secret_scanner.scanners import TrufflehogScanner, GitleaksScanner
 from git_secret_scanner.secret import SecretReport
@@ -29,13 +30,12 @@ class ScanContext:
     no_clean_up: bool
 
 
-def repository_scan(
-    url: str,
-    folder: str,
-    report_file: str,
-    pool: futures.ThreadPoolExecutor,
-    lock: threading.Lock,
-):
+# multithreading resources
+lock = threading.Lock()
+pool = futures.ThreadPoolExecutor(max_workers=5)
+
+
+def repository_scan(url: str, folder: str, report_file: str):
     repository = url.split('/')[-1].removesuffix('.git')
     destination = f'{folder}/{repository}'
 
@@ -79,8 +79,8 @@ def repository_scan(
     except Exception as error:
         # shutdown the whole pool if we catch an error
         pool.shutdown(wait=False, cancel_futures=True)
-        # print the error we got
-        print(error)
+        # print the error we got and fail
+        print_error_and_fail(error)
 
 
 def task_with_progress_spiner(description: str, task: Callable) -> Any:
@@ -105,10 +105,6 @@ def run_scan(context: ScanContext, git_resource: GitResource) -> None:
     if not os.path.exists(repo_path):
         os.makedirs(repo_path)
 
-    # setup multithreading
-    lock = threading.Lock()
-    pool = futures.ThreadPoolExecutor(max_workers=5)
-
     # setup the report file with column
     if not os.path.exists(context.file):
         with open(context.file, 'w') as report_file:
@@ -128,7 +124,7 @@ def run_scan(context: ScanContext, git_resource: GitResource) -> None:
 
         # submit tasks to the thread pool
         for url in repo_urls:
-            future = pool.submit(repository_scan, url, repo_path, context.file, pool, lock)
+            future = pool.submit(repository_scan, url, repo_path, context.file)
             future.add_done_callback(lambda _: progress.update(task, advance=1))
 
         # wait for all tasks to complete
