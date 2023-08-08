@@ -4,7 +4,7 @@ import os
 import shutil
 import typer
 
-from git_secret_scanner.console import print_error_and_fail
+from git_secret_scanner.console import exit_with_error
 from git_secret_scanner.git import RepositoryVisibility, GithubResource, GitlabResource
 from git_secret_scanner.scan import ScanContext, ScanType, run_scan
 
@@ -40,7 +40,7 @@ no_clean_up_option = typer.Option('--no-clean-up',
 def check_requirements(ctx: typer.Context):
     for tool in REQUIREMENTS:
         if shutil.which(tool) is None:
-            print_error_and_fail(f'Required tool missing: {tool} is not installed.')
+            exit_with_error(f'Required tool missing: {tool} is not installed.')
 
 
 @cli.command(help='Scan secrets in a GitHub organization\'s repositories')
@@ -64,7 +64,8 @@ def github(
     # look for the requirement GITHUB_TOKEN environment variable
     token = os.environ.get('GITHUB_TOKEN')
     if not token:
-        print_error_and_fail('Missing environment variable: GITHUB_TOKEN is not defined.')
+        exit_with_error('Missing environment variable: GITHUB_TOKEN is not defined.')
+        return
 
     git_resource = GithubResource(org, visibility, not no_archived, token=token)
 
@@ -92,7 +93,8 @@ def gitlab(
     # look for the requirement GITLAB_TOKEN environment variable
     token = os.environ.get('GITLAB_TOKEN')
     if not token:
-        print_error_and_fail('Missing environment variable: GITLAB_TOKEN is not defined.')
+        exit_with_error('Missing environment variable: GITLAB_TOKEN is not defined.')
+        return
 
     git_resource = GitlabResource(group, visibility, not no_archived, token=token)
 

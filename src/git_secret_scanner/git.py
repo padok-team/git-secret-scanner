@@ -27,12 +27,17 @@ class GitResource():
 
     @staticmethod
     def clone(url: str, directory: str) -> None:
-        try:
-            subprocess.check_call([
-                'git', 'clone', url, directory
-            ], stdout=subprocess.DEVNULL)
-        except subprocess.CalledProcessError:
-            raise Exception('failed to clone repository')
+        proc = subprocess.run([
+                'git', 'clone', '--quiet', url, directory
+            ],
+            stdout=subprocess.DEVNULL,
+            stderr=subprocess.PIPE,
+        )
+
+        if proc.returncode != 0:
+            error = RuntimeError(f'failed to clone repository {url}')
+            error.add_note(proc.stderr.decode('utf-8'))
+            raise error
 
     def get_repository_urls(self) -> list[str]:
         raise NotImplementedError('"get_repository_urls" method not implemented')

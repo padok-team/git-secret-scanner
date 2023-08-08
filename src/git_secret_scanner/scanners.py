@@ -49,28 +49,27 @@ TrufflehogReportItem = TypedDict('TrufflehogReportItem', {
 
 class TrufflehogScanner(Scanner):
     def scan(self) -> None:
-        report_path = os.path.join(self.directory, 'trufflehog.json')
-
-        try:
-            subprocess.check_call([
+        proc = subprocess.run([
                 'trufflehog', 'filesystem',
                     '--no-update',
                     '--json',
-                    self.directory, '>', report_path,
-            ], stdout=subprocess.DEVNULL)
-        except subprocess.CalledProcessError:
-            raise Exception('trufflehog scan failed')
+                    self.directory,
+            ],
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,
+        )
 
-        with open(report_path, 'r') as report:
-            raw_scan_results = report.read()
+        if proc.returncode != 0:
+            error = RuntimeError(f'trufflehog scan failed for {self.repository}')
+            error.add_note(proc.stderr.decode('utf-8'))
+            raise error
 
-        # remove the report file to make sure it is not read by other scanners
-        os.remove(report_path)
+        report = proc.stdout.decode('utf-8')
 
-        if len(raw_scan_results) == 0:
+        if len(report) == 0:
             return
 
-        for raw_secret in raw_scan_results.split('\n')[:-1]:
+        for raw_secret in report.split('\n')[:-1]:
             secret: TrufflehogReportItem = json.loads(raw_secret)
             result = SecretReport(
                 repository=self.repository,
@@ -100,17 +99,25 @@ class GitleaksScanner(Scanner):
     def scan(self) -> None:
         report_path = os.path.join(self.directory, 'gitleaks.json')
 
-        try:
-            subprocess.check_call([
+        proc = subprocess.run([
                 'gitleaks', 'detect',
                     '--no-git',
                     '--source', self.directory,
                     '--report-format', 'json',
                     '--report-path', report_path,
+                    '--no-banner',
+                    '--no-color',
+                    '--log-level', 'error',
                     '--exit-code', '0',
-            ], stdout=subprocess.DEVNULL)
-        except subprocess.CalledProcessError:
-            raise Exception('gitleaks scan failed')
+            ],
+            stdout=subprocess.DEVNULL,
+            stderr=subprocess.PIPE,
+        )
+
+        if proc.returncode != 0:
+            error = RuntimeError(f'gitleaks scan failed for {self.repository}')
+            error.add_note(proc.stderr.decode('utf-8'))
+            raise error
 
         with open(report_path, 'r') as report:
             raw_scan_results = report.read()
