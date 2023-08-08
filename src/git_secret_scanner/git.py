@@ -60,7 +60,7 @@ class GitlabResource(GitResource):
         visibility = None if self.visibility == RepositoryVisibility.All else self.visibility
 
         # authenticate user and get the group to analyze
-        gitlab = Gitlab(private_token=self.__token)
+        gitlab = Gitlab(private_token=self._token)
         group = gitlab.groups.get(self.organization)
 
         repository_urls: list[str] = []

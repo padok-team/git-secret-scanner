@@ -7,7 +7,7 @@ import os
 import shutil
 import tempfile
 
-from git_secret_scanner.console import print, exit_with_error, ProgressSpinner, ProgressBar
+from git_secret_scanner.console import exit_with_error, ProgressSpinner, ProgressBar
 from git_secret_scanner.git import GitResource
 from git_secret_scanner.scanners import TrufflehogScanner, GitleaksScanner
 from git_secret_scanner.secret import SecretReport
@@ -82,7 +82,8 @@ def run_scan(context: ScanContext, git_resource: GitResource) -> None:
             repo_urls = git_resource.get_repository_urls()
         except Exception as error:
             progress.error()
-            exit_with_error(error)
+            exit_with_error('Failed to list repositories', error)
+            return
 
     # create tmp directory for cloned repositories
     repo_path = context.repo_path
@@ -127,12 +128,13 @@ def run_scan(context: ScanContext, git_resource: GitResource) -> None:
                         executor.shutdown(wait=False, cancel_futures=True)
                         progress.error()
                         exit_with_error('Scan failed', error)
+                        return
 
     # delete cloned repositories when cleanup is enabled
     if not context.no_clean_up:
-        with ProgressSpinner(f'Listing {git_resource.organization} repositories...') as progress:
+        with ProgressSpinner('Cleaning up cloned repositories...') as progress:
             try:
                 shutil.rmtree(repo_path)
             except Exception as error:
                 progress.error()
-                exit_with_error(error)
+                exit_with_error('Failed to perform cleanup', error)

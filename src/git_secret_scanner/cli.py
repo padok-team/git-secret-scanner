@@ -40,7 +40,7 @@ no_clean_up_option = typer.Option('--no-clean-up',
 def check_requirements(ctx: typer.Context):
     for tool in REQUIREMENTS:
         if shutil.which(tool) is None:
-            exit_with_error(f'Required tool missing: {tool} is not installed.')
+            exit_with_error(f'Required tool missing: {tool} was not found.')
 
 
 @cli.command(help='Scan secrets in a GitHub organization\'s repositories')
