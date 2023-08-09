@@ -76,14 +76,13 @@ def repository_scan(url: str, folder: str, report_file: str):
 
 
 def run_scan(context: ScanContext, git_resource: GitResource) -> None:
-    with ProgressSpinner(f'Listing {git_resource.organization} repositories...') as progress:
-        try:
-            # retrieving org repositories
+    repo_urls = []
+
+    try:
+        with ProgressSpinner(f'Listing {git_resource.organization} repositories...') as progress:
             repo_urls = git_resource.get_repository_urls()
-        except Exception as error:
-            progress.error()
-            exit_with_error('Failed to list repositories', error)
-            return
+    except Exception as error:
+        exit_with_error('Failed to list repositories', error)
 
     # create tmp directory for cloned repositories
     repo_path = context.repo_path
@@ -107,34 +106,39 @@ def run_scan(context: ScanContext, git_resource: GitResource) -> None:
                 'hash',
             ])
 
-    with ProgressBar('Scanning repositories...', len(repo_urls)) as progress:
-        # submit tasks to the thread pool
-        with futures.ThreadPoolExecutor(max_workers=5) as executor:
-            scan_futures = [
-                executor.submit(repository_scan, url, repo_path, context.file) for url in repo_urls
-            ]
+    try:
+        with ProgressBar('Scanning repositories...', len(repo_urls)) as progress:
+            # submit tasks to the thread pool
+            with futures.ThreadPoolExecutor(max_workers=5) as executor:
+                scan_futures = [
+                    executor.submit(
+                        repository_scan,
+                        url,
+                        repo_path,
+                        context.file,
+                    ) for url in repo_urls
+                ]
 
-            # iterate over completed futures that are yielded
-            for future in futures.as_completed(scan_futures):
-                try:
-                    # check that the future did not raise an exception
-                    future.result()
-                     # update progress
-                    progress.update(1)
-                except Exception as error:
-                    # if the future is canceled, it is intended and not an error
-                    if not isinstance(error, futures.CancelledError):
-                        # cancel remaning futures on error
-                        executor.shutdown(wait=True, cancel_futures=True)
-                        progress.error()
-                        exit_with_error('Scan failed', error)
-                        return
+                # iterate over completed futures that are yielded
+                for future in futures.as_completed(scan_futures):
+                    try:
+                        # check that the future did not raise an exception
+                        future.result()
+                            # update progress
+                        progress.update(1)
+                    except Exception as error:
+                        # if the future is canceled, it is intended and not an error
+                        if not isinstance(error, futures.CancelledError):
+                            # cancel remaning futures on error
+                            executor.shutdown(wait=True, cancel_futures=True)
+                            raise error
+    except Exception as error:
+        exit_with_error('Scan failed', error)
 
     # delete cloned repositories when cleanup is enabled
     if not context.no_clean_up:
-        with ProgressSpinner('Cleaning up cloned repositories...') as progress:
-            try:
-                shutil.rmtree(repo_path)
-            except Exception as error:
-                progress.error()
-                exit_with_error('Failed to perform cleanup', error)
+        try:
+            with ProgressSpinner('Cleaning up cloned repositories...') as progress:
+                    shutil.rmtree(repo_path)
+        except Exception as error:
+            exit_with_error('Failed to perform cleanup', error)

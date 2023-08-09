@@ -1,5 +1,8 @@
 from __future__ import annotations
+
 import typing
+from typing import Type, Optional
+from types import TracebackType
 
 from rich import console, progress
 
@@ -31,14 +34,20 @@ class Progress(progress.Progress):
     def __init__(self, *args, description='', **kwargs):
         super().__init__(*args, **kwargs)
         self.description = description
-
-    def stop(self):
-        super().stop()
-        print(f'[green]✔[/green] {self.description}')
-
-    def error(self):
-        super().stop()
-        print(f'[red]⨯[/red] {self.description}')
+    
+    def __exit__(
+        self,
+        exc_type: Optional[Type[BaseException]],
+        exc_val: Optional[BaseException],
+        exc_tb: Optional[TracebackType],
+    ) -> bool:
+        super().__exit__(exc_type, exc_val, exc_tb)
+        if exc_type is None and exc_val is None:
+            print(f'[green]✔[/green] {self.description}')
+            return True
+        else:
+            print(f'[red]⨯[/red] {self.description}')
+            return False
 
 
 class ProgressSpinner(Progress):
