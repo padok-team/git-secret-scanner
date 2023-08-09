@@ -125,7 +125,7 @@ def run_scan(context: ScanContext, git_resource: GitResource) -> None:
                     # if the future is canceled, it is intended and not an error
                     if not isinstance(error, futures.CancelledError):
                         # cancel remaning futures on error
-                        executor.shutdown(wait=False, cancel_futures=True)
+                        executor.shutdown(wait=True, cancel_futures=True)
                         progress.error()
                         exit_with_error('Scan failed', error)
                         return
