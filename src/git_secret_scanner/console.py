@@ -19,7 +19,7 @@ def print_error(message: str, error: Exception | None = None):
     content = message
     if error:
         content = f'{message}: {error}'
-        if len(error.__notes__) > 0:
+        if hasattr(error, '__notes__') and len(error.__notes__) > 0:
             for note in error.__notes__:
                 content += f'\n\n{note}'
     stderr.print(f'[red]{content}[/red]')
