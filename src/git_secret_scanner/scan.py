@@ -33,7 +33,7 @@ lock = threading.Lock()
 
 
 def repository_scan(url: str, folder: str, report_file: str):
-    repository = url.split('/')[-1].removesuffix('.git')
+    repository = url.split(':')[-1].removesuffix('.git')
     destination = f'{folder}/{repository}'
 
     # check if repository has already been scanned
@@ -87,7 +87,7 @@ def run_scan(context: ScanContext, git_resource: GitResource) -> None:
     # create tmp directory for cloned repositories
     repo_path = context.repo_path
     if repo_path == '':
-        repo_path = f'{tempfile.gettempdir()}/{TEMP_DIR_NAME}/{git_resource.organization}'
+        repo_path = f'{tempfile.gettempdir()}/{TEMP_DIR_NAME}'
 
     if not os.path.exists(repo_path):
         os.makedirs(repo_path)
