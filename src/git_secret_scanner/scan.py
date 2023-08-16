@@ -23,8 +23,8 @@ class ScanType(enum.StrEnum):
 
 class ScanContext:
     scan_type: ScanType
-    file: str
-    repo_path: str
+    report_path: str
+    clone_path: str
     no_clean_up: bool
 
 
@@ -32,9 +32,9 @@ class ScanContext:
 lock = threading.Lock()
 
 
-def repository_scan(url: str, folder: str, report_file: str):
+def repository_scan(url: str, clone_path: str, report_path: str):
     repository = url.split(':')[-1].removesuffix('.git')
-    destination = f'{folder}/{repository}'
+    destination = f'{clone_path}/{repository}'
 
     # check if repository has already been scanned
     if os.path.exists(destination):
@@ -61,8 +61,8 @@ def repository_scan(url: str, folder: str, report_file: str):
         # TODO: this should normally be performed by the underlying OS, this should be removed
         with lock:
             # generate CSV report
-            with open(report_file, 'a') as file:
-                csv_writer = csv.writer(file)
+            with open(report_path, 'a') as report_file:
+                csv_writer = csv.writer(report_file)
                 for result in results:
                     csv_writer.writerow([
                         result.repository,
@@ -85,16 +85,16 @@ def run_scan(context: ScanContext, git_resource: GitResource) -> None:
         exit_with_error('Failed to list repositories', error)
 
     # create tmp directory for cloned repositories
-    repo_path = context.repo_path
-    if repo_path == '':
-        repo_path = f'{tempfile.gettempdir()}/{TEMP_DIR_NAME}'
+    clone_path = context.clone_path
+    if clone_path == '':
+        clone_path = f'{tempfile.gettempdir()}/{TEMP_DIR_NAME}'
 
-    if not os.path.exists(repo_path):
-        os.makedirs(repo_path)
+    if not os.path.exists(clone_path):
+        os.makedirs(clone_path)
 
     # setup the report file with column
-    if not os.path.exists(context.file):
-        with open(context.file, 'w') as report_file:
+    if not os.path.exists(context.report_path):
+        with open(context.report_path, 'w') as report_file:
             csv_writer = csv.writer(report_file)
             csv_writer.writerow([
                 'repository',
@@ -114,8 +114,8 @@ def run_scan(context: ScanContext, git_resource: GitResource) -> None:
                     executor.submit(
                         repository_scan,
                         url,
-                        repo_path,
-                        context.file,
+                        clone_path,
+                        context.report_path,
                     ) for url in repo_urls
                 ]
 
@@ -139,6 +139,6 @@ def run_scan(context: ScanContext, git_resource: GitResource) -> None:
     if not context.no_clean_up:
         try:
             with ProgressSpinner('Cleaning up cloned repositories...') as progress:
-                    shutil.rmtree(repo_path)
+                    shutil.rmtree(clone_path)
         except Exception as error:
             exit_with_error('Failed to perform cleanup', error)

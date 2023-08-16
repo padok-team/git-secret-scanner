@@ -23,11 +23,11 @@ visibility_option = typer.Option('--visibility', '-v',
 no_archived_option = typer.Option('--no-archived',
     help='Do not scan archived repositories',
 )
-file_option = typer.Option('--file', '-f',
-    metavar='<file>',
+report_path_option = typer.Option('--report-path', '-r',
+    metavar='<path>',
     help='Path to the CSV report file to generate',
 )
-repo_path_option = typer.Option('--repo-path', '-p',
+clone_path_option = typer.Option('--clone-path', '-c',
     metavar='<path>',
     help='Folder path to store repositories',
 )
@@ -51,14 +51,14 @@ def github(
     )],
     visibility: Annotated[RepositoryVisibility, visibility_option] = RepositoryVisibility.All,
     no_archived: Annotated[bool, no_archived_option] = False,
-    file: Annotated[str, file_option] = 'report.csv',
-    repo_path: Annotated[str, repo_path_option] = '',
+    report_path: Annotated[str, report_path_option] = 'report.csv',
+    clone_path: Annotated[str, clone_path_option] = '',
     no_clean_up: Annotated[bool, no_clean_up_option] = False,
 ):
     context = ScanContext()
     context.scan_type = ScanType.Github
-    context.file = file
-    context.repo_path = repo_path
+    context.report_path = report_path
+    context.clone_path = clone_path
     context.no_clean_up = no_clean_up
 
     # look for the requirement GITHUB_TOKEN environment variable
@@ -80,14 +80,14 @@ def gitlab(
     )],
     visibility: Annotated[RepositoryVisibility, visibility_option] = RepositoryVisibility.All,
     no_archived: Annotated[bool, no_archived_option] = False,
-    file: Annotated[str, file_option] = 'report.csv',
-    repo_path: Annotated[str, repo_path_option] = '',
+    report_path: Annotated[str, report_path_option] = 'report.csv',
+    clone_path: Annotated[str, clone_path_option] = '',
     no_clean_up: Annotated[bool, no_clean_up_option] = False,
 ):
     context = ScanContext()
     context.scan_type = ScanType.Gitlab
-    context.file = file
-    context.repo_path = repo_path
+    context.report_path = report_path
+    context.clone_path = clone_path
     context.no_clean_up = no_clean_up
 
     # look for the requirement GITLAB_TOKEN environment variable
