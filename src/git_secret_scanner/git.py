@@ -58,6 +58,7 @@ class GithubResource(GitResource):
 class GitlabResource(GitResource):
     def get_repository_urls(self) -> list[str]:
         visibility = None if self.visibility == RepositoryVisibility.All else self.visibility
+        archived = None if self.include_archived else False
 
         # authenticate user and get the group to analyze
         gitlab = Gitlab(private_token=self._token)
@@ -65,15 +66,13 @@ class GitlabResource(GitResource):
 
         repository_urls: list[str] = []
 
-        # get all projects of group
-        for repo in group.projects.list(get_all=True, visibility=visibility):
+        projects = group.projects.list(
+            visibility=visibility,
+            archived=archived,
+            include_subgroups=True,
+            iterator=True,
+        )
+        for repo in projects:
             repository_urls.append(repo.ssh_url_to_repo)
-
-        # remove archived repositories if specified by user
-        if not self.include_archived:
-            tmp: list[str] = []
-            for repo in group.projects.list(get_all=True, archived=True, visibility=visibility):
-                tmp.append(repo.ssh_url_to_repo)
-            repository_urls = [x for x in repository_urls if x not in [y for y in tmp]]
 
         return repository_urls
