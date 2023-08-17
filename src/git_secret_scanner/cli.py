@@ -1,10 +1,15 @@
 from typing_extensions import Annotated
 
 import os
+import shutil
 import typer
 
+from git_secret_scanner.console import exit_with_error
 from git_secret_scanner.git import RepositoryVisibility, GithubResource, GitlabResource
 from git_secret_scanner.scan import ScanContext, ScanType, run_scan
+
+
+REQUIREMENTS=('git', 'trufflehog', 'gitleaks')
 
 
 pretty_debug = True if os.environ.get('PRETTY_DEBUG') in ['1', 'True'] else False
@@ -31,6 +36,13 @@ no_clean_up_option = typer.Option('--no-clean-up',
 )
 
 
+@cli.callback()
+def check_requirements(ctx: typer.Context):
+    for tool in REQUIREMENTS:
+        if shutil.which(tool) is None:
+            exit_with_error(f'Required tool missing: {tool} was not found.')
+
+
 @cli.command(help='Scan secrets in a GitHub organization\'s repositories')
 def github(
     org: Annotated[str, typer.Option('-o', '--org',
@@ -49,7 +61,13 @@ def github(
     context.repo_path = repo_path
     context.no_clean_up = no_clean_up
 
-    git_resource = GithubResource(org, visibility, not no_archived)
+    # look for the requirement GITHUB_TOKEN environment variable
+    token = os.environ.get('GITHUB_TOKEN')
+    if not token:
+        exit_with_error('Missing environment variable: GITHUB_TOKEN is not defined.')
+        return
+
+    git_resource = GithubResource(org, visibility, not no_archived, token=token)
 
     run_scan(context, git_resource)
 
@@ -72,7 +90,13 @@ def gitlab(
     context.repo_path = repo_path
     context.no_clean_up = no_clean_up
 
-    git_resource = GitlabResource(group, visibility, not no_archived)
+    # look for the requirement GITLAB_TOKEN environment variable
+    token = os.environ.get('GITLAB_TOKEN')
+    if not token:
+        exit_with_error('Missing environment variable: GITLAB_TOKEN is not defined.')
+        return
+
+    git_resource = GitlabResource(group, visibility, not no_archived, token=token)
 
     run_scan(context, git_resource)
 
