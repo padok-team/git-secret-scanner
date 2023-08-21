@@ -13,50 +13,64 @@ class RepositoryVisibility(enum.StrEnum):
     Public = 'public'
 
 
+class GitProtocol(enum.StrEnum):
+    Https = 'https'
+    Ssh = 'ssh'
+
+
 class GitResource():
     def __init__(self,
         organization: str,
         visibility: RepositoryVisibility,
         include_archived: bool,
+        server: str,
+        protocol = GitProtocol.Https,
         token = '',
     ):
         self.organization = organization
         self.visibility = visibility
         self.include_archived = include_archived
+        self.server = server
+        self.protocol = protocol
         self._token = token
 
-    @staticmethod
-    def clone(url: str, directory: str) -> None:
+    def clone_repo(self, repo: str, destination = '') -> None:
+        if self.protocol == GitProtocol.Https:
+            clone_url = f'https://x-access-token:{self._token}@{self.server}/{repo}'
+        else:
+            clone_url = f'git@{self.server}:{repo}'
+
         proc = subprocess.run([
-                'git', 'clone', '--quiet', url, directory
+                'git', 'clone', '--quiet', clone_url, destination
             ],
             stdout=subprocess.DEVNULL,
             stderr=subprocess.PIPE,
         )
 
         if proc.returncode != 0:
-            error = RuntimeError(f'failed to clone repository {url}')
+            error = RuntimeError(f'failed to clone repository {repo}')
             error.add_note(proc.stderr.decode('utf-8'))
             raise error
 
-    def get_repository_urls(self) -> list[str]:
-        raise NotImplementedError('"get_repository_urls" method not implemented')
+    def list_repos(self) -> list[str]:
+        raise NotImplementedError('"list_repos()" method not implemented')
 
 
 class GithubResource(GitResource):
-    def get_repository_urls(self) -> list[str]:
+    def list_repos(self) -> list[str]:
         github = Github(self._token)
 
-        repository_urls: list[str] = []
+        repos: list[str] = []
+
         for repo in github.get_organization(self.organization).get_repos(self.visibility):
             if self.include_archived or not repo.archived:
-                repository_urls.append(repo.ssh_url)
+                repos.append(f'{self.organization}/{repo.name}')
 
-        return repository_urls
+        return repos
 
 
 class GitlabResource(GitResource):
-    def get_repository_urls(self) -> list[str]:
+    def list_repos(self) -> list[str]:
         visibility = None if self.visibility == RepositoryVisibility.All else self.visibility
         archived = None if self.include_archived else False
 
@@ -64,7 +78,7 @@ class GitlabResource(GitResource):
         gitlab = Gitlab(private_token=self._token)
         group = gitlab.groups.get(self.organization)
 
-        repository_urls: list[str] = []
+        repos: list[str] = []
 
         projects = group.projects.list(
             visibility=visibility,
@@ -73,6 +87,6 @@ class GitlabResource(GitResource):
             iterator=True,
         )
         for repo in projects:
-            repository_urls.append(repo.ssh_url_to_repo)
+            repos.append(repo.path_with_namespace)
 
-        return repository_urls
+        return repos
