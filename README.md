@@ -81,6 +81,8 @@ $ export GITHUB_TOKEN="<token>"
 $ export GITLAB_TOKEN="<token>"
 ```
 
+> GitHub tokens require the `repo` scope, GitLab tokens require both `read_api` and `read_repository` scopes.
+
 ## Usage
 
 To get detailed usage information about how to use this tool, run 

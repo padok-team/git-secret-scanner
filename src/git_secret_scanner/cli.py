@@ -5,8 +5,8 @@ import shutil
 import typer
 
 from git_secret_scanner.console import exit_with_error
-from git_secret_scanner.git import RepositoryVisibility, GithubResource, GitlabResource
-from git_secret_scanner.scan import ScanContext, ScanType, run_scan
+from git_secret_scanner.git import RepositoryVisibility, GitProtocol, GithubResource, GitlabResource
+from git_secret_scanner.scan import ScanContext, run_scan
 
 
 REQUIREMENTS=('git', 'trufflehog', 'gitleaks')
@@ -23,16 +23,19 @@ visibility_option = typer.Option('--visibility', '-v',
 no_archived_option = typer.Option('--no-archived',
     help='Do not scan archived repositories',
 )
-file_option = typer.Option('--file', '-f',
-    metavar='<file>',
+report_path_option = typer.Option('--report-path', '-r',
+    metavar='<path>',
     help='Path to the CSV report file to generate',
 )
-repo_path_option = typer.Option('--repo-path', '-p',
+clone_path_option = typer.Option('--clone-path', '-c',
     metavar='<path>',
     help='Folder path to store repositories',
 )
 no_clean_up_option = typer.Option('--no-clean-up',
     help='Do not clean up repositories downloaded after the scan',
+)
+ssh_clone_option = typer.Option('--ssh-clone',
+    help='Use SSH to clone repositories instead of HTTPS',
 )
 
 
@@ -51,25 +54,34 @@ def github(
     )],
     visibility: Annotated[RepositoryVisibility, visibility_option] = RepositoryVisibility.All,
     no_archived: Annotated[bool, no_archived_option] = False,
-    file: Annotated[str, file_option] = 'report.csv',
-    repo_path: Annotated[str, repo_path_option] = '',
+    report_path: Annotated[str, report_path_option] = 'report.csv',
+    clone_path: Annotated[str, clone_path_option] = '',
     no_clean_up: Annotated[bool, no_clean_up_option] = False,
+    ssh_clone: Annotated[bool, ssh_clone_option] = False,
 ):
-    context = ScanContext()
-    context.scan_type = ScanType.Github
-    context.file = file
-    context.repo_path = repo_path
-    context.no_clean_up = no_clean_up
-
     # look for the requirement GITHUB_TOKEN environment variable
     token = os.environ.get('GITHUB_TOKEN')
     if not token:
         exit_with_error('Missing environment variable: GITHUB_TOKEN is not defined.')
         return
 
-    git_resource = GithubResource(org, visibility, not no_archived, token=token)
+    git_resource = GithubResource(
+        organization=org,
+        visibility=visibility,
+        include_archived=(not no_archived),
+        server='github.com', # TODO: allow customizing server
+        protocol=(GitProtocol.Ssh if ssh_clone else GitProtocol.Https),
+        token=token,
+    )
 
-    run_scan(context, git_resource)
+    context = ScanContext(
+        report_path=report_path,
+        clone_path=clone_path,
+        no_clean_up=no_clean_up,
+        git_resource=git_resource,
+    )
+
+    run_scan(context)
 
 
 @cli.command(help='Scan secrets in a GitLab group\'s repositories')
@@ -80,25 +92,34 @@ def gitlab(
     )],
     visibility: Annotated[RepositoryVisibility, visibility_option] = RepositoryVisibility.All,
     no_archived: Annotated[bool, no_archived_option] = False,
-    file: Annotated[str, file_option] = 'report.csv',
-    repo_path: Annotated[str, repo_path_option] = '',
+    report_path: Annotated[str, report_path_option] = 'report.csv',
+    clone_path: Annotated[str, clone_path_option] = '',
     no_clean_up: Annotated[bool, no_clean_up_option] = False,
+    ssh_clone: Annotated[bool, ssh_clone_option] = False,
 ):
-    context = ScanContext()
-    context.scan_type = ScanType.Gitlab
-    context.file = file
-    context.repo_path = repo_path
-    context.no_clean_up = no_clean_up
-
     # look for the requirement GITLAB_TOKEN environment variable
     token = os.environ.get('GITLAB_TOKEN')
     if not token:
         exit_with_error('Missing environment variable: GITLAB_TOKEN is not defined.')
         return
 
-    git_resource = GitlabResource(group, visibility, not no_archived, token=token)
+    git_resource = GitlabResource(
+        organization=group,
+        visibility=visibility,
+        include_archived=(not no_archived),
+        server='gitlab.com', # TODO: allow customizing server
+        protocol=(GitProtocol.Ssh if ssh_clone else GitProtocol.Https),
+        token=token,
+    )
 
-    run_scan(context, git_resource)
+    context = ScanContext(
+        report_path=report_path,
+        clone_path=clone_path,
+        no_clean_up=no_clean_up,
+        git_resource=git_resource,
+    )
+
+    run_scan(context)
 
 
 if __name__ == '__main__':
