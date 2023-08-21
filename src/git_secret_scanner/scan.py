@@ -62,15 +62,20 @@ def repository_scan(
         with open(report_path, 'a') as report_file:
             csv_writer = csv.writer(report_file)
             for result in results:
-                csv_writer.writerow([
-                    result.repository,
-                    result.path,
-                    result.kind,
-                    result.line,
-                    result.valid,
-                    result.cleartext,
-                    result.hash,
-                ])
+                # ignore git relative stuff which is irrelevant
+                # TODO: this a quick and dirty fix to the issue caused by the HTTPS clone,
+                # that makes git store the clone URI with the token under .git/config
+                # will be fixed properly in https://github.com/padok-team/git-secret-scanner/issues/26
+                if not result.path.startswith('.git/'):
+                    csv_writer.writerow([
+                        result.repository,
+                        result.path,
+                        result.kind,
+                        result.line,
+                        result.valid,
+                        result.cleartext,
+                        result.hash,
+                    ])
 
 
 def run_scan(context: ScanContext) -> None:
