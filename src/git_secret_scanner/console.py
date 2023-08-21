@@ -32,7 +32,7 @@ def exit_with_error(message: str, error: Exception | None = None):
 
 class Progress(progress.Progress):
     def __init__(self, *args, description='', **kwargs):
-        super().__init__(*args, **kwargs)
+        super().__init__(console=stdout, *args, **kwargs)
         self.description = description
     
     def __exit__(
