@@ -40,7 +40,12 @@ def repository_scan(
         print('Repository '+repo+' already scanned !')
     else:
         # clone repositories and run the tools
-        git_resource.clone_repo(repo, destination=destination)
+        git_resource.clone_repo(
+            repo=repo,
+            destination=destination,
+            shallow_clone=True,
+            no_git=True
+        )
 
         trufflehog = TrufflehogScanner(destination, repo)
         trufflehog.scan()
@@ -62,20 +67,15 @@ def repository_scan(
         with open(report_path, 'a') as report_file:
             csv_writer = csv.writer(report_file)
             for result in results:
-                # ignore git relative stuff which is irrelevant
-                # TODO: this a quick and dirty fix to the issue caused by the HTTPS clone,
-                # that makes git store the clone URI with the token under .git/config
-                # will be fixed properly in https://github.com/padok-team/git-secret-scanner/issues/26
-                if not result.path.startswith('.git/'):
-                    csv_writer.writerow([
-                        result.repository,
-                        result.path,
-                        result.kind,
-                        result.line,
-                        result.valid,
-                        result.cleartext,
-                        result.hash,
-                    ])
+                csv_writer.writerow([
+                    result.repository,
+                    result.path,
+                    result.kind,
+                    result.line,
+                    result.valid,
+                    result.cleartext,
+                    result.hash,
+                ])
 
 
 def run_scan(context: ScanContext) -> None:

@@ -69,7 +69,6 @@ def github(
         organization=org,
         visibility=visibility,
         include_archived=(not no_archived),
-        server='github.com', # TODO: allow customizing server
         protocol=(GitProtocol.Ssh if ssh_clone else GitProtocol.Https),
         token=token,
     )
@@ -107,7 +106,6 @@ def gitlab(
         organization=group,
         visibility=visibility,
         include_archived=(not no_archived),
-        server='gitlab.com', # TODO: allow customizing server
         protocol=(GitProtocol.Ssh if ssh_clone else GitProtocol.Https),
         token=token,
     )
