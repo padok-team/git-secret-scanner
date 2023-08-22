@@ -19,7 +19,7 @@ class SecretReport():
         self.line = line
         self.valid = valid
         self.cleartext = cleartext
-        self.hash = hashlib.sha256(cleartext.encode('utf-8')).hexdigest()
+        self.fingerprint = hashlib.sha256(cleartext.encode('utf-8')).hexdigest()
 
     def __hash__(self) -> int:
         return hash((self.repository, self.path, self.hash))
@@ -29,7 +29,7 @@ class SecretReport():
             raise NotImplementedError
         return self.repository == other.repository \
             and self.path == other.path \
-            and self.hash == other.hash
+            and self.fingerprint == other.fingerprint
 
     def __str__(self) -> str:
         return f'SecretReport{{ \
@@ -39,7 +39,7 @@ class SecretReport():
             line={self.line}, \
             valid={self.valid}, \
             cleartext{self.cleartext}, \
-            hash={self.hash}}}'
+            fingerprint={self.fingerprint}}}'
 
     def __repr__(self) -> str:
         return f'SecretReport{{ \
@@ -49,7 +49,7 @@ class SecretReport():
             line={self.line}, \
             valid={self.valid}, \
             cleartext{self.cleartext}, \
-            hash={self.hash}}}'
+            fingerprint={self.fingerprint}}}'
 
     @staticmethod
     def merge(first: SecretReport, second: SecretReport) -> SecretReport:

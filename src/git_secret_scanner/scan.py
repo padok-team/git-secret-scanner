@@ -78,7 +78,7 @@ def repository_scan(
                     result.line,
                     result.valid,
                     result.cleartext,
-                    result.hash,
+                    result.fingerprint,
                 ])
 
 
@@ -112,7 +112,7 @@ def run_scan(context: ScanContext) -> None:
                 'line',
                 'valid',
                 'cleartext',
-                'hash',
+                'fingerprint',
             ])
 
     try:
