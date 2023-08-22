@@ -37,6 +37,13 @@ no_clean_up_option = typer.Option('--no-clean-up',
 ssh_clone_option = typer.Option('--ssh-clone',
     help='Use SSH to clone repositories instead of HTTPS',
 )
+baseline_option = typer.Option('--baseline', '-b',
+    metavar='<path>',
+    help='Path to the baseline to take into account',
+)
+create_baseline_option = typer.Option('--create-baseline',
+    help='Generate a baseline for all secrets detected in this scan',
+)
 
 
 @cli.callback()
@@ -58,6 +65,8 @@ def github(
     clone_path: Annotated[str, clone_path_option] = '',
     no_clean_up: Annotated[bool, no_clean_up_option] = False,
     ssh_clone: Annotated[bool, ssh_clone_option] = False,
+    baseline: Annotated[str, baseline_option] = '',
+    create_baseline: Annotated[bool, create_baseline_option] = False,
 ):
     # look for the requirement GITHUB_TOKEN environment variable
     token = os.environ.get('GITHUB_TOKEN')
@@ -77,6 +86,8 @@ def github(
         report_path=report_path,
         clone_path=clone_path,
         no_clean_up=no_clean_up,
+        baseline_path=baseline,
+        create_baseline=create_baseline,
         git_resource=git_resource,
     )
 
@@ -95,6 +106,8 @@ def gitlab(
     clone_path: Annotated[str, clone_path_option] = '',
     no_clean_up: Annotated[bool, no_clean_up_option] = False,
     ssh_clone: Annotated[bool, ssh_clone_option] = False,
+    baseline: Annotated[str, baseline_option] = '',
+    create_baseline: Annotated[bool, create_baseline_option] = False,
 ):
     # look for the requirement GITLAB_TOKEN environment variable
     token = os.environ.get('GITLAB_TOKEN')
@@ -114,6 +127,8 @@ def gitlab(
         report_path=report_path,
         clone_path=clone_path,
         no_clean_up=no_clean_up,
+        baseline_path=baseline,
+        create_baseline=create_baseline,
         git_resource=git_resource,
     )
 

@@ -19,11 +19,15 @@ class ScanContext:
         report_path: str,
         clone_path: str,
         no_clean_up: bool,
+        baseline_path: str,
+        create_baseline: bool,
         git_resource: GitResource,
     ):
         self.report_path = report_path
         self.clone_path = clone_path
         self.no_clean_up = no_clean_up
+        self.baseline_path = baseline_path
+        self.create_baseline = create_baseline
         self.git_resource = git_resource
 
 
