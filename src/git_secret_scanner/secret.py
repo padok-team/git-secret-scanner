@@ -22,7 +22,7 @@ class SecretReport():
         self.fingerprint = hashlib.sha256(cleartext.encode('utf-8')).hexdigest()
 
     def __hash__(self) -> int:
-        return hash((self.repository, self.path, self.hash))
+        return hash((self.repository, self.path, self.fingerprint))
 
     def __eq__(self, other) -> bool:
         if not isinstance(other, type(self)):
