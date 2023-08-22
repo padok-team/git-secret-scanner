@@ -36,6 +36,7 @@ def repository_scan(
     report_path: str,
     clone_path: str,
     git_resource: GitResource,
+    baseline: list[str] = [],
 ):
     destination = f'{clone_path}/{repo}'
 
@@ -71,15 +72,17 @@ def repository_scan(
         with open(report_path, 'a') as report_file:
             csv_writer = csv.writer(report_file)
             for result in results:
-                csv_writer.writerow([
-                    result.repository,
-                    result.path,
-                    result.kind,
-                    result.line,
-                    result.valid,
-                    result.cleartext,
-                    result.fingerprint,
-                ])
+                # only add secret in report if it is not part of the baseline
+                if result.fingerprint not in baseline:
+                    csv_writer.writerow([
+                        result.repository,
+                        result.path,
+                        result.kind,
+                        result.line,
+                        result.valid,
+                        result.cleartext,
+                        result.fingerprint,
+                    ])
 
 
 def run_scan(context: ScanContext) -> None:
@@ -101,7 +104,7 @@ def run_scan(context: ScanContext) -> None:
     if not os.path.exists(clone_path):
         os.makedirs(clone_path)
 
-    # setup the report file with column
+    # setup the report file with columns
     if not os.path.exists(context.report_path):
         with open(context.report_path, 'w') as report_file:
             csv_writer = csv.writer(report_file)
@@ -115,6 +118,11 @@ def run_scan(context: ScanContext) -> None:
                 'fingerprint',
             ])
 
+    baseline = []
+    if len(context.baseline_path) > 0:
+        with open(context.baseline_path, 'r') as baseline_file:
+            baseline = [fingerprint.rstrip() for fingerprint in baseline_file]
+
     try:
         with ProgressBar('Scanning repositories...', len(repos)) as progress:
             # submit tasks to the thread pool
@@ -126,6 +134,7 @@ def run_scan(context: ScanContext) -> None:
                         context.report_path,
                         clone_path,
                         git_resource,
+                        baseline,
                     ) for repo in repos
                 ]
 
