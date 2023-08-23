@@ -91,7 +91,7 @@ def run_scan(context: ScanContext) -> None:
 
     # setup the report file with columns
     if not os.path.exists(context.report_path):
-        with open(context.report_path, 'w') as report_file:
+        with open(context.report_path, 'w', newline='') as report_file:
             csv_writer = csv.writer(report_file)
             csv_writer.writerow([
                 'repository',
@@ -132,7 +132,7 @@ def run_scan(context: ScanContext) -> None:
                         results = future.result()
 
                         # append the results to the report
-                        with open(context.report_path, 'a') as report_file:
+                        with open(context.report_path, 'a', newline='') as report_file:
                             csv_writer = csv.writer(report_file)
                             for result in results:
                                 # only add secret in report if it is not part of the baseline
