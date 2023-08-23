@@ -80,9 +80,39 @@ def repository_scan(
  
 
 def run_scan(context: ScanContext) -> None:
-    git_resource = context.git_resource
+    # retrieve fingerprints to ignore from the scan
+    ignored_fingerprints: set[str] = set()
+    if len(context.fingerprints_ignore_path) > 0:
+        try:
+            with open(context.fingerprints_ignore_path, 'r') as fingerprints_ignore_file:
+                ignored_fingerprints = {
+                    fingerprint.rstrip() for fingerprint in fingerprints_ignore_file
+                }
+        except FileNotFoundError as error:
+            exit_with_error('Failed to open fingerprints ingore file', error)
 
-    repos = []
+    # retrieve the baseline
+    baseline: set[SecretReport] = set()
+    if len(context.baseline_path) > 0:
+        try:
+            with open(context.baseline_path, 'r') as baseline_file:
+                csv_reader = csv.DictReader(baseline_file)
+                for secret in csv_reader:
+                    baseline.add(
+                        SecretReport(
+                            repository=secret['repository'],
+                            path=secret['path'],
+                            kind=secret['kind'],
+                            line=(int(secret['line']) if len(secret['line']) > 0 else None),
+                            valid=(bool(secret['valid']) if len(secret['valid']) > 0 else None),
+                            cleartext=(secret['cleartext'] if 'cleartext' in secret else None),
+                            fingerprint=secret['fingerprint'],
+                        )
+                    )
+        except FileNotFoundError as error:
+            exit_with_error('Failed to open baseline file', error)
+
+    git_resource, repos = context.git_resource, []
 
     try:
         with ProgressSpinner(f'Listing {git_resource.organization} repositories...') as progress:
@@ -111,32 +141,6 @@ def run_scan(context: ScanContext) -> None:
                 'cleartext',
                 'fingerprint',
             ])
-
-    # retrieve fingerprints to ignore from the scan
-    ignored_fingerprints: set[str] = set()
-    if len(context.fingerprints_ignore_path) > 0:
-        with open(context.fingerprints_ignore_path, 'r') as fingerprints_ignore_file:
-            ignored_fingerprints = {
-                fingerprint.rstrip() for fingerprint in fingerprints_ignore_file
-            }
-
-    # retrieve the baseline
-    baseline: set[SecretReport] = set()
-    if len(context.baseline_path) > 0:
-        with open(context.baseline_path, 'r') as baseline_file:
-            csv_reader = csv.DictReader(baseline_file)
-            for secret in csv_reader:
-                baseline.add(
-                    SecretReport(
-                        repository=secret['repository'],
-                        path=secret['path'],
-                        kind=secret['kind'],
-                        line=(int(secret['line']) if len(secret['line']) > 0 else None),
-                        valid=(bool(secret['valid']) if len(secret['valid']) > 0 else None),
-                        cleartext=(secret['cleartext'] if 'cleartext' in secret else None),
-                        fingerprint=secret['fingerprint'],
-                    )
-                )
 
     try:
         with ProgressBar('Scanning repositories...', len(repos)) as progress:
