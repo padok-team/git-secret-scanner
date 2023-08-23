@@ -20,7 +20,9 @@ class SecretReport():
         self.line = line
         self.valid = valid
         self.cleartext = cleartext
-        self.fingerprint = fingerprint or hashlib.sha256(cleartext.encode('utf-8')).hexdigest()
+        self.fingerprint = None
+        if cleartext is not None:
+            self.fingerprint = fingerprint or hashlib.sha256(cleartext.encode('utf-8')).hexdigest()
 
     def __hash__(self) -> int:
         return hash((self.repository, self.path, self.fingerprint))
