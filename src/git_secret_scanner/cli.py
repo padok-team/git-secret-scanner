@@ -18,31 +18,32 @@ cli = typer.Typer(pretty_exceptions_enable=pretty_debug)
 
 
 visibility_option = typer.Option('--visibility', '-v',
-    help='Repositories visibility',
+    help='Repositories visibility.',
 )
 no_archived_option = typer.Option('--no-archived',
-    help='Do not scan archived repositories',
+    help='Do not scan archived repositories.',
 )
 report_path_option = typer.Option('--report-path', '-r',
     metavar='<path>',
-    help='Path to the CSV report file to generate',
+    help='Path to the CSV report file to generate.',
 )
 clone_path_option = typer.Option('--clone-path', '-c',
     metavar='<path>',
-    help='Folder path to store repositories',
+    help='Folder path to store repositories.',
 )
 no_clean_up_option = typer.Option('--no-clean-up',
-    help='Do not clean up repositories downloaded after the scan',
+    help='Do not clean up repositories downloaded after the scan.',
 )
 ssh_clone_option = typer.Option('--ssh-clone',
-    help='Use SSH to clone repositories instead of HTTPS',
+    help='Use SSH to clone repositories instead of HTTPS.',
 )
-baseline_option = typer.Option('--baseline', '-b',
+baseline_path_option = typer.Option('--baseline-path', '-b',
     metavar='<path>',
-    help='Path to the baseline to take into account',
+    help='Path to the CSV report to use as baseline for the scan.',
 )
-create_baseline_option = typer.Option('--create-baseline',
-    help='Generate a baseline for all secrets detected in this scan',
+fingerprints_ignore_path_option = typer.Option('--fingerprints-ignore-path', '-i',
+    metavar='<path>',
+    help='Path to file with newline separated fingerprints (SHA-256) of secrets to ignore during the scan.',  # noqa: E501
 )
 
 
@@ -57,7 +58,7 @@ def check_requirements(ctx: typer.Context):
 def github(
     org: Annotated[str, typer.Option('-o', '--org',
         metavar='<organization>',
-        help='Organization to scan',
+        help='Organization to scan.',
     )],
     visibility: Annotated[RepositoryVisibility, visibility_option] = RepositoryVisibility.All,
     no_archived: Annotated[bool, no_archived_option] = False,
@@ -65,8 +66,8 @@ def github(
     clone_path: Annotated[str, clone_path_option] = '',
     no_clean_up: Annotated[bool, no_clean_up_option] = False,
     ssh_clone: Annotated[bool, ssh_clone_option] = False,
-    baseline: Annotated[str, baseline_option] = '',
-    create_baseline: Annotated[bool, create_baseline_option] = False,
+    fingerprints_ignore_path: Annotated[str, fingerprints_ignore_path_option] = '',
+    baseline_path: Annotated[str, baseline_path_option] = '',
 ):
     # look for the requirement GITHUB_TOKEN environment variable
     token = os.environ.get('GITHUB_TOKEN')
@@ -86,8 +87,8 @@ def github(
         report_path=report_path,
         clone_path=clone_path,
         no_clean_up=no_clean_up,
-        baseline_path=baseline,
-        create_baseline=create_baseline,
+        fingerprints_ignore_path=fingerprints_ignore_path,
+        baseline_path=baseline_path,
         git_resource=git_resource,
     )
 
@@ -98,7 +99,7 @@ def github(
 def gitlab(
     group: Annotated[str, typer.Option('-o', '--group',
         metavar='<group>',
-        help='Group to scan',
+        help='Group to scan.',
     )],
     visibility: Annotated[RepositoryVisibility, visibility_option] = RepositoryVisibility.All,
     no_archived: Annotated[bool, no_archived_option] = False,
@@ -106,8 +107,8 @@ def gitlab(
     clone_path: Annotated[str, clone_path_option] = '',
     no_clean_up: Annotated[bool, no_clean_up_option] = False,
     ssh_clone: Annotated[bool, ssh_clone_option] = False,
-    baseline: Annotated[str, baseline_option] = '',
-    create_baseline: Annotated[bool, create_baseline_option] = False,
+    fingerprints_ignore_path: Annotated[str, fingerprints_ignore_path_option] = '',
+    baseline_path: Annotated[str, baseline_path_option] = '',
 ):
     # look for the requirement GITLAB_TOKEN environment variable
     token = os.environ.get('GITLAB_TOKEN')
@@ -127,8 +128,8 @@ def gitlab(
         report_path=report_path,
         clone_path=clone_path,
         no_clean_up=no_clean_up,
-        baseline_path=baseline,
-        create_baseline=create_baseline,
+        fingerprints_ignore_path=fingerprints_ignore_path,
+        baseline_path=baseline_path,
         git_resource=git_resource,
     )
 

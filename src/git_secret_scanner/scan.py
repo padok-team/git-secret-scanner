@@ -19,30 +19,29 @@ class ScanContext:
         report_path: str,
         clone_path: str,
         no_clean_up: bool,
+        fingerprints_ignore_path: str,
         baseline_path: str,
-        create_baseline: bool,
         git_resource: GitResource,
     ):
         self.report_path = report_path
         self.clone_path = clone_path
         self.no_clean_up = no_clean_up
         self.baseline_path = baseline_path
-        self.create_baseline = create_baseline
+        self.fingerprints_ignore_path = fingerprints_ignore_path
         self.git_resource = git_resource
 
 
 def repository_scan(
     repo: str,
-    report_path: str,
     clone_path: str,
     git_resource: GitResource,
-    baseline: list[str] = [],
-):
+) -> list[SecretReport]:
     destination = f'{clone_path}/{repo}'
 
     # check if repository has already been scanned
     if os.path.exists(destination):
         print('Repository '+repo+' already scanned !')
+        return []
     else:
         # clone repositories and run the tools
         git_resource.clone_repo(
@@ -67,23 +66,9 @@ def repository_scan(
                 results.append(SecretReport.merge(gr, tr))
             else:
                 results.append(gr)
-
-        # generate CSV report
-        with open(report_path, 'a') as report_file:
-            csv_writer = csv.writer(report_file)
-            for result in results:
-                # only add secret in report if it is not part of the baseline
-                if result.fingerprint not in baseline:
-                    csv_writer.writerow([
-                        result.repository,
-                        result.path,
-                        result.kind,
-                        result.line,
-                        result.valid,
-                        result.cleartext,
-                        result.fingerprint,
-                    ])
-
+        
+        return results
+ 
 
 def run_scan(context: ScanContext) -> None:
     git_resource = context.git_resource
@@ -118,10 +103,13 @@ def run_scan(context: ScanContext) -> None:
                 'fingerprint',
             ])
 
-    baseline = []
-    if len(context.baseline_path) > 0:
-        with open(context.baseline_path, 'r') as baseline_file:
-            baseline = [fingerprint.rstrip() for fingerprint in baseline_file]
+    # retrieve fingerprints to ignore from the scan
+    ignored_fingerprints = []
+    if len(context.fingerprints_ignore_path) > 0:
+        with open(context.fingerprints_ignore_path, 'r') as fingerprints_ignore_file:
+            ignored_fingerprints = [
+                fingerprint.rstrip() for fingerprint in fingerprints_ignore_file
+            ]
 
     try:
         with ProgressBar('Scanning repositories...', len(repos)) as progress:
@@ -131,10 +119,8 @@ def run_scan(context: ScanContext) -> None:
                     executor.submit(
                         repository_scan,
                         repo,
-                        context.report_path,
                         clone_path,
                         git_resource,
-                        baseline,
                     ) for repo in repos
                 ]
 
@@ -142,7 +128,25 @@ def run_scan(context: ScanContext) -> None:
                 for future in futures.as_completed(scan_futures):
                     try:
                         # check that the future did not raise an exception
-                        future.result()
+                        # and retrieve the results from the scan
+                        results = future.result()
+
+                        # append the results to the report
+                        with open(context.report_path, 'a') as report_file:
+                            csv_writer = csv.writer(report_file)
+                            for result in results:
+                                # only add secret in report if it is not part of the baseline
+                                if result.fingerprint not in ignored_fingerprints:
+                                    csv_writer.writerow([
+                                        result.repository,
+                                        result.path,
+                                        result.kind,
+                                        result.line,
+                                        result.valid,
+                                        result.cleartext,
+                                        result.fingerprint,
+                                    ])
+
                         # update progress
                         progress.update(1)
                     except Exception as error:
@@ -154,7 +158,7 @@ def run_scan(context: ScanContext) -> None:
     except Exception as error:
         exit_with_error('Scan failed', error)
 
-    # delete cloned repositories when cleanup is enabled
+    # delete cloned repositories when cleanup is not disabled
     if not context.no_clean_up:
         try:
             with ProgressSpinner('Cleaning up cloned repositories...') as progress:
