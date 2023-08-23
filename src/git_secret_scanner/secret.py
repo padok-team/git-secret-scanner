@@ -11,7 +11,8 @@ class SecretReport():
         kind: str,
         line: int | None,
         valid: bool | None,
-        cleartext: str,
+        cleartext: str | None,
+        fingerprint: str | None = None,
     ) -> None:
         self.repository = repository
         self.path = path
@@ -19,37 +20,48 @@ class SecretReport():
         self.line = line
         self.valid = valid
         self.cleartext = cleartext
-        self.hash = hashlib.sha256(cleartext.encode('utf-8')).hexdigest()
+        self.fingerprint = None
+        if cleartext is not None:
+            self.fingerprint = fingerprint or hashlib.sha256(cleartext.encode('utf-8')).hexdigest()
 
     def __hash__(self) -> int:
-        return hash((self.repository, self.path, self.hash))
+        return hash((self.repository, self.path, self.fingerprint))
 
     def __eq__(self, other) -> bool:
         if not isinstance(other, type(self)):
             raise NotImplementedError
         return self.repository == other.repository \
             and self.path == other.path \
-            and self.hash == other.hash
+            and (self.kind == other.kind
+                or self.kind == 'GenericApiKey'
+                or other.kind == 'GenericApiKey')  \
+            and (self.line == other.line
+                or self.line is None
+                or other.line is None) \
+            and (self.valid == other.valid
+                or self.valid is None
+                or other.valid is None) \
+            and self.fingerprint == other.fingerprint
 
     def __str__(self) -> str:
-        return f'SecretReport{{ \
-            repository={self.repository}, \
-            path={self.path}, \
-            kind={self.kind}, \
-            line={self.line}, \
-            valid={self.valid}, \
-            cleartext{self.cleartext}, \
-            hash={self.hash}}}'
+        return ('SecretReport('
+            f'repository={self.repository},'
+            f'path={self.path},'
+            f'kind={self.kind},'
+            f'line={self.line},'
+            f'valid={self.valid},'
+            f'cleartext={self.cleartext},'
+            f'fingerprint={self.fingerprint})')
 
     def __repr__(self) -> str:
-        return f'SecretReport{{ \
-            repository={self.repository}, \
-            path={self.path}, \
-            kind={self.kind}, \
-            line={self.line}, \
-            valid={self.valid}, \
-            cleartext{self.cleartext}, \
-            hash={self.hash}}}'
+        return ('SecretReport('
+            f'repository={self.repository},'
+            f'path={self.path},'
+            f'kind={self.kind},'
+            f'line={self.line},'
+            f'valid={self.valid},'
+            f'cleartext={self.cleartext},'
+            f'fingerprint={self.fingerprint})')
 
     @staticmethod
     def merge(first: SecretReport, second: SecretReport) -> SecretReport:
