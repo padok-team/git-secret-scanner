@@ -75,7 +75,9 @@ class TrufflehogScanner(Scanner):
                 repository=self.repository,
                 path=secret['SourceMetadata']['Data']['Filesystem']['file'].removeprefix(f'{self.directory}/'),
                 kind=secret['DetectorName'],
-                line=None,
+                line=(secret['SourceMetadata']['Data']['Filesystem']['line']
+                    if 'line' in secret['SourceMetadata']['Data']['Filesystem']
+                    else None),
                 valid=(secret['Verified'] if len(str(secret['Verified'])) > 0 else None),
                 cleartext=secret['Raw'],
             )
