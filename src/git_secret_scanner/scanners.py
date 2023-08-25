@@ -50,10 +50,14 @@ TrufflehogReportItem = TypedDict('TrufflehogReportItem', {
 class TrufflehogScanner(Scanner):
     def scan(self) -> None:
         proc = subprocess.run([
-                'trufflehog', 'filesystem',
+                # truffle filesystem is no longer used as it does not compute line numbers
+                # in the right way
+                'trufflehog', 'git',
                     '--no-update',
+                    # this works since we shallow clone repositories with depth = 1
+                    '--max-depth', '1',
                     '--json',
-                    self.directory,
+                    f'file://{self.directory}',
             ],
             stdout=subprocess.PIPE,
             stderr=subprocess.PIPE,
@@ -73,12 +77,15 @@ class TrufflehogScanner(Scanner):
             secret: TrufflehogReportItem = json.loads(raw_secret)
             result = SecretReport(
                 repository=self.repository,
-                path=secret['SourceMetadata']['Data']['Filesystem']['file'].removeprefix(f'{self.directory}/'),
+                path=secret['SourceMetadata']['Data']['Git']['file'].removeprefix(f'{self.directory}/'),
                 kind=secret['DetectorName'],
-                line=(secret['SourceMetadata']['Data']['Filesystem']['line']
-                    if 'line' in secret['SourceMetadata']['Data']['Filesystem']
+                line=(secret['SourceMetadata']['Data']['Git']['line']
+                    if 'line' in secret['SourceMetadata']['Data']['Git']
                     else None),
-                valid=(secret['Verified'] if len(str(secret['Verified'])) > 0 else None),
+                valid=(secret['Verified']
+                    # validity checks are not relevent on PrivateKeys
+                    if len(str(secret['Verified'])) > 0 and secret['DetectorName'] != 'PrivateKey'
+                    else None),
                 cleartext=secret['Raw'],
             )
             self._results.append(result)

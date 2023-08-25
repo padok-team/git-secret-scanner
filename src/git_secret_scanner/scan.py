@@ -54,7 +54,6 @@ def repository_scan(
             repo=repo,
             destination=destination,
             shallow_clone=True,
-            no_git=True
         )
 
         trufflehog = TrufflehogScanner(destination, repo)
