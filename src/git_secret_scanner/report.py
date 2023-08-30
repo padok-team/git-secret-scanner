@@ -1,9 +1,21 @@
 from __future__ import annotations
 
+import enum
+
 import hashlib
 
 
-class SecretReport():
+class Column(enum.StrEnum):
+    Repository = 'repository'
+    Path = 'path'
+    Kind = 'kind'
+    Line = 'line'
+    Valid = 'valid'
+    Cleartext = 'cleartext'
+    Fingerprint = 'fingerprint'
+
+
+class Secret():
     def __init__(
         self,
         repository: str,
@@ -36,6 +48,17 @@ class SecretReport():
             ).hexdigest()
         elif fingerprint is None and cleartext is None:
             raise AttributeError('SecretReport cannot have both "None" cleartext and fingerprint')
+    
+    def to_row(self) -> list:
+        return [
+            self.repository,
+            self.path,
+            self.kind,
+            self.line,
+            self.valid,
+            self.cleartext,
+            self.fingerprint,
+        ]
 
     def __hash__(self) -> int:
         return hash((self.repository, self.path, self.fingerprint))
@@ -77,9 +100,9 @@ class SecretReport():
             f'fingerprint={self.fingerprint})')
 
     @staticmethod
-    def merge(first: SecretReport, second: SecretReport) -> SecretReport:
+    def merge(first: Secret, second: Secret) -> Secret:
         if first == second:
-            return SecretReport(
+            return Secret(
                 repository=first.repository,
                 path=first.path,
                 kind=(first.kind if first.kind != 'GenericApiKey' else second.kind),

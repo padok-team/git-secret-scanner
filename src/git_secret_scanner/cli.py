@@ -4,9 +4,7 @@ import os
 import shutil
 import typer
 
-from git_secret_scanner.console import exit_with_error
-from git_secret_scanner.git import RepositoryVisibility, GitProtocol, GithubResource, GitlabResource
-from git_secret_scanner.scan import ScanContext, run_scan
+from . import console, scm, scan
 
 
 REQUIREMENTS=('git', 'trufflehog', 'gitleaks')
@@ -51,7 +49,7 @@ fingerprints_ignore_path_option = typer.Option('--fingerprints-ignore-path', '-i
 def check_requirements(ctx: typer.Context):
     for tool in REQUIREMENTS:
         if shutil.which(tool) is None:
-            exit_with_error(f'Required tool missing: {tool} was not found.')
+            console.exit_with_error(f'Required tool missing: {tool} was not found.')
 
 
 @cli.command(help='Scan secrets in a GitHub organization\'s repositories')
@@ -60,7 +58,10 @@ def github(
         metavar='<organization>',
         help='Organization to scan.',
     )],
-    visibility: Annotated[RepositoryVisibility, visibility_option] = RepositoryVisibility.All,
+    visibility: Annotated[
+        scm.RepositoryVisibility,
+        visibility_option,
+    ] = scm.RepositoryVisibility.All,
     no_archived: Annotated[bool, no_archived_option] = False,
     report_path: Annotated[str, report_path_option] = 'report.csv',
     clone_path: Annotated[str, clone_path_option] = '',
@@ -72,27 +73,27 @@ def github(
     # look for the requirement GITHUB_TOKEN environment variable
     token = os.environ.get('GITHUB_TOKEN')
     if not token:
-        exit_with_error('Missing environment variable: GITHUB_TOKEN is not defined.')
+        console.exit_with_error('Missing environment variable: GITHUB_TOKEN is not defined.')
         return
 
-    git_resource = GithubResource(
+    git_scm = scm.Github(
         organization=org,
         visibility=visibility,
         include_archived=(not no_archived),
-        protocol=(GitProtocol.Ssh if ssh_clone else GitProtocol.Https),
+        protocol=(scm.GitProtocol.Ssh if ssh_clone else scm.GitProtocol.Https),
         token=token,
     )
 
-    context = ScanContext(
+    context = scan.Context(
         report_path=report_path,
         clone_path=clone_path,
         no_clean_up=no_clean_up,
         fingerprints_ignore_path=fingerprints_ignore_path,
         baseline_path=baseline_path,
-        git_resource=git_resource,
+        git_scm=git_scm,
     )
 
-    run_scan(context)
+    scan.run(context)
 
 
 @cli.command(help='Scan secrets in a GitLab group\'s repositories')
@@ -101,7 +102,10 @@ def gitlab(
         metavar='<group>',
         help='Group to scan.',
     )],
-    visibility: Annotated[RepositoryVisibility, visibility_option] = RepositoryVisibility.All,
+    visibility: Annotated[
+        scm.RepositoryVisibility, 
+        visibility_option
+    ] = scm.RepositoryVisibility.All,
     no_archived: Annotated[bool, no_archived_option] = False,
     report_path: Annotated[str, report_path_option] = 'report.csv',
     clone_path: Annotated[str, clone_path_option] = '',
@@ -113,27 +117,27 @@ def gitlab(
     # look for the requirement GITLAB_TOKEN environment variable
     token = os.environ.get('GITLAB_TOKEN')
     if not token:
-        exit_with_error('Missing environment variable: GITLAB_TOKEN is not defined.')
+        console.exit_with_error('Missing environment variable: GITLAB_TOKEN is not defined.')
         return
 
-    git_resource = GitlabResource(
+    git_scm = scm.Gitlab(
         organization=group,
         visibility=visibility,
         include_archived=(not no_archived),
-        protocol=(GitProtocol.Ssh if ssh_clone else GitProtocol.Https),
+        protocol=(scm.GitProtocol.Ssh if ssh_clone else scm.GitProtocol.Https),
         token=token,
     )
 
-    context = ScanContext(
+    context = scan.Context(
         report_path=report_path,
         clone_path=clone_path,
         no_clean_up=no_clean_up,
         fingerprints_ignore_path=fingerprints_ignore_path,
         baseline_path=baseline_path,
-        git_resource=git_resource,
+        git_scm=git_scm,
     )
 
-    run_scan(context)
+    scan.run(context)
 
 
 if __name__ == '__main__':
