@@ -1,4 +1,5 @@
 from __future__ import annotations
+from typing import Self
 
 import enum
 
@@ -15,9 +16,8 @@ class Column(enum.StrEnum):
     Fingerprint = 'fingerprint'
 
 
-class Secret():
-    def __init__(
-        self,
+class Secret:
+    def __init__(self: Self,
         repository: str,
         path: str,
         kind: str,
@@ -44,12 +44,13 @@ class Secret():
                     # gitleaks and trufflhog do not keep as many "-" in the cleartext of PrivateKeys
                     # we strip them to make sure we end up with the same fingerprints
                     .strip('-')
-                    .encode('utf-8')
+                    .encode('utf-8'),
             ).hexdigest()
         elif fingerprint is None and cleartext is None:
-            raise AttributeError('SecretReport cannot have both "None" cleartext and fingerprint')
-    
-    def to_row(self) -> list:
+            msg = 'SecretReport cannot have both "None" cleartext and fingerprint'
+            raise AttributeError(msg)
+
+    def to_row(self: Self) -> list:
         return [
             self.repository,
             self.path,
@@ -60,10 +61,10 @@ class Secret():
             self.fingerprint,
         ]
 
-    def __hash__(self) -> int:
+    def __hash__(self: Self) -> int:
         return hash((self.repository, self.path, self.fingerprint))
 
-    def __eq__(self, other) -> bool:
+    def __eq__(self: Self, other: Secret) -> bool:
         if not isinstance(other, type(self)):
             raise NotImplementedError
         return self.repository == other.repository \
@@ -79,7 +80,7 @@ class Secret():
                 or other.valid is None) \
             and self.fingerprint == other.fingerprint
 
-    def __str__(self) -> str:
+    def __str__(self: Self) -> str:
         return ('SecretReport('
             f'repository={self.repository},'
             f'path={self.path},'
@@ -89,7 +90,7 @@ class Secret():
             f'cleartext={self.cleartext},'
             f'fingerprint={self.fingerprint})')
 
-    def __repr__(self) -> str:
+    def __repr__(self: Self) -> str:
         return ('SecretReport('
             f'repository={self.repository},'
             f'path={self.path},'
@@ -111,4 +112,5 @@ class Secret():
                 cleartext=first.cleartext,
                 fingerprint=first.fingerprint,
             )
-        raise AttributeError('non equal secrets cannot be merged')
+        msg = 'non equal secrets cannot be merged'
+        raise AttributeError(msg)

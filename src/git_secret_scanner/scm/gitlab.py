@@ -1,17 +1,20 @@
+from __future__ import annotations
+from typing import Self
+
 from gitlab import Gitlab as PythonGitlab
 
 from .git import GitScm, GitProtocol, RepositoryVisibility
 
 
 class Gitlab(GitScm):
-    def __init__(self,
+    def __init__(self: Self,
         organization: str,
         visibility: RepositoryVisibility,
         include_archived: bool,
-        server = 'gitlab.com',
-        protocol = GitProtocol.Https,
-        token = '',
-    ):
+        server: str = 'gitlab.com',
+        protocol: GitProtocol = GitProtocol.Https,
+        token: str = '',
+    ) -> None:
         super().__init__(
             organization,
             visibility,
@@ -21,11 +24,9 @@ class Gitlab(GitScm):
             token,
         )
 
-    def list_repos(self) -> list[str]:
+    def list_repos(self: Self) -> list[str]:
         gitlab = PythonGitlab(url=f'https://{self.server}', private_token=self._token)
         group = gitlab.groups.get(self.organization)
-
-        repos: list[str] = []
 
         projects = group.projects.list(
             visibility=self.visibility.gitlab_conv(),
@@ -33,7 +34,5 @@ class Gitlab(GitScm):
             include_subgroups=True,
             iterator=True,
         )
-        for repo in projects:
-            repos.append(repo.path_with_namespace)
 
-        return repos
+        return [repo.path_with_namespace for repo in projects]

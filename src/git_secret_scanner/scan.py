@@ -1,6 +1,9 @@
+from __future__ import annotations
+from typing import Self
+
 from concurrent import futures
 import csv
-import os
+from pathlib import Path
 import shutil
 import sys
 import tempfile
@@ -18,15 +21,14 @@ csv.field_size_limit(sys.maxsize)
 
 
 class Context:
-    def __init__(
-        self,
+    def __init__(self: Self,
         report_path: str,
         clone_path: str,
         no_clean_up: bool,
         fingerprints_ignore_path: str,
         baseline_path: str,
         git_scm: scm.GitScm,
-    ):
+    ) -> None:
         self.report_path = report_path
         self.clone_path = clone_path
         self.no_clean_up = no_clean_up
@@ -43,45 +45,45 @@ def repository_scan(
     destination = f'{clone_path}/{repo}'
 
     # check if repository has already been scanned
-    if os.path.exists(destination):
-        print('Repository '+repo+' already scanned !')
+    if Path(destination).exists():
+        console.print('Repository '+repo+' already scanned !')
         return set()
-    else:
-        # clone repositories and run the tools
-        git_scm.clone_repo(
-            repo=repo,
-            destination=destination,
-            shallow_clone=True,
-        )
 
-        trufflehog = scanners.TrufflehogScanner(destination, repo)
-        trufflehog.scan()
-        trufflehog_results = trufflehog.get_results()
+    # clone repositories and run the tools
+    git_scm.clone_repo(
+        repo=repo,
+        destination=destination,
+        shallow_clone=True,
+    )
 
-        gitleaks = scanners.GitleaksScanner(destination, repo)
-        gitleaks.scan()
-        gitleaks_results = gitleaks.get_results()
+    trufflehog = scanners.TrufflehogScanner(destination, repo)
+    trufflehog.scan()
+    trufflehog_results = trufflehog.get_results()
 
-        trufflehog_set = set(trufflehog_results)
-        gitleaks_set = set(gitleaks_results)
+    gitleaks = scanners.GitleaksScanner(destination, repo)
+    gitleaks.scan()
+    gitleaks_results = gitleaks.get_results()
 
-        results = trufflehog_set ^ gitleaks_set
-        intersect = trufflehog_set & gitleaks_set
-    
-        for secret in intersect:
-            t_secret = (trufflehog_results & {secret}).pop()
-            g_secret = (gitleaks_results & {secret}).pop()
-            results.add(report.Secret.merge(t_secret, g_secret))
+    trufflehog_set = set(trufflehog_results)
+    gitleaks_set = set(gitleaks_results)
 
-        return results
- 
+    results = trufflehog_set ^ gitleaks_set
+    intersect = trufflehog_set & gitleaks_set
 
-def run(context: Context) -> None:
+    for secret in intersect:
+        t_secret = (trufflehog_results & {secret}).pop()
+        g_secret = (gitleaks_results & {secret}).pop()
+        results.add(report.Secret.merge(t_secret, g_secret))
+
+    return results
+
+
+def run(context: Context) -> None:  # noqa: PLR0912, PLR0915
     # retrieve fingerprints to ignore from the scan
     ignored_fingerprints: set[str] = set()
     if len(context.fingerprints_ignore_path) > 0:
         try:
-            with open(context.fingerprints_ignore_path, 'r') as fingerprints_ignore_file:
+            with Path(context.fingerprints_ignore_path).open('r') as fingerprints_ignore_file:
                 ignored_fingerprints = {
                     fingerprint.rstrip() for fingerprint in fingerprints_ignore_file
                 }
@@ -92,7 +94,7 @@ def run(context: Context) -> None:
     baseline: set[report.Secret] = set()
     if len(context.baseline_path) > 0:
         try:
-            with open(context.baseline_path, 'r') as baseline_file:
+            with Path(context.baseline_path).open('r') as baseline_file:
                 csv_reader = csv.DictReader(baseline_file)
                 for secret in csv_reader:
                     baseline.add(
@@ -110,7 +112,7 @@ def run(context: Context) -> None:
                                 if report.Column.Cleartext in secret
                                 else None),
                             fingerprint=secret['fingerprint'],
-                        )
+                        ),
                     )
         except FileNotFoundError as error:
             console.exit_with_error('Failed to open baseline file', error)
@@ -119,7 +121,7 @@ def run(context: Context) -> None:
 
     try:
         with console.ProgressSpinner(
-            f'Listing {context.git_scm.organization} repositories...'
+            f'Listing {context.git_scm.organization} repositories...',
         ) as progress:
             repos = context.git_scm.list_repos()
     except Exception as error:
@@ -130,17 +132,17 @@ def run(context: Context) -> None:
     if clone_path == '':
         clone_path = f'{tempfile.gettempdir()}/{TEMP_DIR_NAME}'
 
-    if not os.path.exists(clone_path):
-        os.makedirs(clone_path)
+    if not Path(clone_path).exists():
+        Path(clone_path).mkdir(parents=True)
 
     # setup the report file with columns
-    if not os.path.exists(context.report_path):
-        with open(context.report_path, 'w', newline='') as report_file:
+    if not Path(context.report_path).exists():
+        with Path(context.report_path).open('w', newline='') as report_file:
             csv_writer = csv.writer(report_file)
             csv_writer.writerow(list(report.Column))
 
     try:
-        with console.ProgressBar('Scanning repositories...', len(repos)) as progress:
+        with console.ProgressBar('Scanning repositories...', len(repos)) as progress: # noqa: SIM117
             # submit tasks to the thread pool
             with futures.ThreadPoolExecutor(max_workers=5) as executor:
                 scan_futures = [
@@ -160,23 +162,22 @@ def run(context: Context) -> None:
                         results = future.result()
 
                         # append the results to the report
-                        with open(context.report_path, 'a', newline='') as report_file:
+                        with Path(context.report_path).open('a', newline='') as report_file:
                             csv_writer = csv.writer(report_file)
                             # only add secrets that are not already in the baseline
                             for result in results - baseline:
                                 # only add secret in report if its fingerprint is not ignored
                                 if result.fingerprint not in ignored_fingerprints:
-                                    if result not in baseline:
-                                        csv_writer.writerow(result.to_row())
+                                    csv_writer.writerow(result.to_row())
 
                         # update progress
                         progress.update(1)
-                    except Exception as error:
+                    except Exception as error:  # noqa: PERF203
                         # if the future is canceled, it is intended and not an error
                         if not isinstance(error, futures.CancelledError):
                             # cancel remaning futures on error
                             executor.shutdown(wait=True, cancel_futures=True)
-                            raise error
+                            raise
     except Exception as error:
         console.exit_with_error('Scan failed', error)
 

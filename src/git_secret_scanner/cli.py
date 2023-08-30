@@ -1,4 +1,4 @@
-from typing_extensions import Annotated
+from typing import Annotated
 
 import os
 import shutil
@@ -10,7 +10,7 @@ from . import console, scm, scan
 REQUIREMENTS=('git', 'trufflehog', 'gitleaks')
 
 
-pretty_debug = True if os.environ.get('PRETTY_DEBUG') in ['1', 'True'] else False
+pretty_debug = os.environ.get('PRETTY_DEBUG') in ['1', 'True']
 
 cli = typer.Typer(pretty_exceptions_enable=pretty_debug)
 
@@ -46,13 +46,13 @@ fingerprints_ignore_path_option = typer.Option('--fingerprints-ignore-path', '-i
 
 
 @cli.callback()
-def check_requirements(ctx: typer.Context):
+def check_requirements(_: typer.Context) -> None:
     for tool in REQUIREMENTS:
         if shutil.which(tool) is None:
             console.exit_with_error(f'Required tool missing: {tool} was not found.')
 
 
-@cli.command(help='Scan secrets in a GitHub organization\'s repositories')
+@cli.command(help="Scan secrets in a GitHub organization's repositories")
 def github(
     org: Annotated[str, typer.Option('-o', '--org',
         metavar='<organization>',
@@ -69,7 +69,7 @@ def github(
     ssh_clone: Annotated[bool, ssh_clone_option] = False,
     fingerprints_ignore_path: Annotated[str, fingerprints_ignore_path_option] = '',
     baseline_path: Annotated[str, baseline_path_option] = '',
-):
+) -> None:
     # look for the requirement GITHUB_TOKEN environment variable
     token = os.environ.get('GITHUB_TOKEN')
     if not token:
@@ -96,15 +96,15 @@ def github(
     scan.run(context)
 
 
-@cli.command(help='Scan secrets in a GitLab group\'s repositories')
+@cli.command(help="Scan secrets in a GitLab group's repositories")
 def gitlab(
     group: Annotated[str, typer.Option('-o', '--group',
         metavar='<group>',
         help='Group to scan.',
     )],
     visibility: Annotated[
-        scm.RepositoryVisibility, 
-        visibility_option
+        scm.RepositoryVisibility,
+        visibility_option,
     ] = scm.RepositoryVisibility.All,
     no_archived: Annotated[bool, no_archived_option] = False,
     report_path: Annotated[str, report_path_option] = 'report.csv',
@@ -113,7 +113,7 @@ def gitlab(
     ssh_clone: Annotated[bool, ssh_clone_option] = False,
     fingerprints_ignore_path: Annotated[str, fingerprints_ignore_path_option] = '',
     baseline_path: Annotated[str, baseline_path_option] = '',
-):
+) -> None:
     # look for the requirement GITLAB_TOKEN environment variable
     token = os.environ.get('GITLAB_TOKEN')
     if not token:

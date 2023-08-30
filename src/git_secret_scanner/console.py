@@ -1,21 +1,20 @@
 from __future__ import annotations
-
-import typing
-from typing import Type, Optional
+from typing import cast, Self, Any
 from types import TracebackType
 
 from rich import console, progress
+import sys
 
 
 stdout = console.Console()
 stderr = console.Console(stderr=True)
 
 
-def print(message: str):
+def print(message: str) -> None:  # noqa: A001
     stdout.print(message)
 
 
-def print_error(message: str, error: Exception | None = None):
+def print_error(message: str, error: Exception | None = None) -> None:
     content = message
     if error:
         content = f'{message}: {error}'
@@ -25,33 +24,35 @@ def print_error(message: str, error: Exception | None = None):
     stderr.print(f'[red]{content}[/red]')
 
 
-def exit_with_error(message: str, error: Exception | None = None):
+def exit_with_error(message: str, error: Exception | None = None) -> None:
     print_error(message, error)
-    exit(1)
+    sys.exit(1)
 
 
 class Progress(progress.Progress):
-    def __init__(self, *args, description='', **kwargs):
-        super().__init__(console=stdout, *args, **kwargs)
+    def __init__(self: Self,
+        *args: Any,  # noqa: ANN401
+        description: str = '',
+        transient: bool = False,
+    ) -> None:
+        super().__init__(*args, console=stdout, transient=transient)
         self.description = description
-    
-    def __exit__(
-        self,
-        exc_type: Optional[Type[BaseException]],
-        exc_val: Optional[BaseException],
-        exc_tb: Optional[TracebackType],
+
+    def __exit__(self: Self,
+        exc_type: type[BaseException] | None,
+        exc_val: BaseException | None,
+        exc_tb: TracebackType | None,
     ) -> bool:
         super().__exit__(exc_type, exc_val, exc_tb)
         if exc_type is None and exc_val is None:
             print(f'[green]✔[/green] {self.description}')
             return True
-        else:
-            print(f'[red]⨯[/red] {self.description}')
-            return False
+        print(f'[red]⨯[/red] {self.description}')  # noqa: RUF001
+        return False
 
 
 class ProgressSpinner(Progress):
-    def __init__(self, description: str):
+    def __init__(self: Self, description: str) -> None:
         super().__init__(
             progress.SpinnerColumn(),
             progress.TextColumn('[progress.description]{task.description}'),
@@ -61,18 +62,18 @@ class ProgressSpinner(Progress):
         self.task = super().add_task(description=description, total=None)
 
     # useful for typing
-    def __enter__(self) -> ProgressSpinner:
-        return typing.cast(ProgressSpinner, super().__enter__())
+    def __enter__(self: Self) -> Self:
+        return cast(ProgressSpinner, super().__enter__())
 
 
 class ProgressBar(Progress):
-    def __init__(self, description: str, num_steps: int):
+    def __init__(self: Self, description: str, num_steps: int) -> None:
         super().__init__(transient=True, description=description)
         self.task = super().add_task(description, total=num_steps)
-    
-    def update(self, advance: float):
+
+    def update(self: Self, advance: float) -> None:
         super().update(self.task, advance=advance)
 
     # useful for typing
-    def __enter__(self) -> ProgressBar:
-        return typing.cast(ProgressBar, super().__enter__())
+    def __enter__(self: Self) -> Self:
+        return cast(ProgressBar, super().__enter__())

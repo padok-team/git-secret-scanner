@@ -1,11 +1,11 @@
 from __future__ import annotations
-from typing import Any
+from typing import Self, Any
 
-import os
-import subprocess
 import json
+from pathlib import Path
+import subprocess
 
-import git_secret_scanner.report as report
+from git_secret_scanner import report
 
 from .scanner import BaseScanner
 
@@ -29,13 +29,13 @@ GITLEAKS_TO_TRUFFLEHOG = {
 }
 
 
-class GitleaksReportItem():
-    def __init__(self,
+class GitleaksReportItem:
+    def __init__(self: Self,
         rule_id: str,
         file: str,
         start_line: int,
         secret: str,
-    ):
+    ) -> None:
         self.rule_id = rule_id
         self.file = file
         self.start_line = start_line
@@ -52,13 +52,13 @@ class GitleaksReportItem():
 
 
 class GitleaksScanner(BaseScanner):
-    def __map_rule(self, rule: str) -> str:
+    def __map_rule(self: Self, rule: str) -> str:
         return GITLEAKS_TO_TRUFFLEHOG[rule] if rule in GITLEAKS_TO_TRUFFLEHOG else rule
 
-    def scan(self) -> None:
-        report_path = os.path.join(self.directory, 'gitleaks.json')
+    def scan(self: Self) -> None:
+        report_path = Path(self.directory) / 'gitleaks.json'
 
-        proc = subprocess.run([
+        proc = subprocess.run([  # noqa: S603, S607
                 'gitleaks', 'detect',
                     '--no-git',
                     '--source', self.directory,
@@ -78,11 +78,11 @@ class GitleaksScanner(BaseScanner):
             error.add_note(proc.stderr.decode('utf-8'))
             raise error
 
-        with open(report_path, 'r') as report_file:
+        with Path(report_path).open('r') as report_file:
             raw_scan_results = report_file.read()
 
         # remove the report file to make sure it is not read by other scanners
-        os.remove(report_path)
+        Path(report_path).unlink()
 
         if len(raw_scan_results) == 0:
             return

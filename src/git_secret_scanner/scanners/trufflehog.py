@@ -1,22 +1,22 @@
 from __future__ import annotations
-from typing import Any
+from typing import Self, Any
 
 import json
 import subprocess
 
-import git_secret_scanner.report as report
+from git_secret_scanner import report
 
 from .scanner import BaseScanner
 
 
-class TrufflehogReportItem():
-    def __init__(self,
+class TrufflehogReportItem:
+    def __init__(self: Self,
         file: str,
         line: int | None,
         detector_name: str,
         verified: bool | None,
         raw: str,
-    ):
+    ) -> None:
         self.file = file
         self.line = line
         self.detector_name = detector_name
@@ -40,8 +40,8 @@ class TrufflehogReportItem():
 
 
 class TrufflehogScanner(BaseScanner):
-    def scan(self) -> None:
-        proc = subprocess.run([
+    def scan(self: Self) -> None:
+        proc = subprocess.run([  # noqa: S603, S607
                 # truffle filesystem is no longer used as it does not compute line numbers
                 # in the right way
                 'trufflehog', 'git',
@@ -51,8 +51,7 @@ class TrufflehogScanner(BaseScanner):
                     '--json',
                     f'file://{self.directory}',
             ],
-            stdout=subprocess.PIPE,
-            stderr=subprocess.PIPE,
+            capture_output=True,
         )
 
         if proc.returncode != 0:
