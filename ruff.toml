@@ -1,1 +1,22 @@
+src = ["src/git_secret_scanner"]
+
+select = ["ALL"]
+ignore = [
+    "BLE",     # flake8-blind-except
+    "C90",     # mccabe
+    "D",       # pydocstyle
+    "EXE",     # flake8-executable
+    "FBT",     # flake8-boolean-trap
+    "I001",    # isort:unsorted-imports
+    "PLR0913", # Pylint:too-many-arguments
+    "PLR1714", # Pylint:repeated-equality-comparison-target
+    "PLW1510", # Pylint:subprocess-run-without-check
+    "TCH",     # flake8-type-checking
+]
+
 line-length = 100
+
+
+[flake8-quotes]
+inline-quotes = "single"
+multiline-quotes = "single"
