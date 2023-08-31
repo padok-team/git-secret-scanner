@@ -1,16 +1,16 @@
 from __future__ import annotations
 from typing import Self
 
-from git_secret_scanner import report
+from git_secret_scanner.report import ReportSecret
 
 
 class BaseScanner:
     def __init__(self: Self, directory: str, repository: str) -> None:
         self.directory = directory
         self.repository = repository
-        self._results: set[report.Secret] = set()
+        self._results: set[ReportSecret] = set()
 
-    def get_results(self: Self) -> set[report.Secret]:
+    def get_results(self: Self) -> set[ReportSecret]:
         return self._results
 
     def scan(self: Self) -> None:

@@ -6,13 +6,11 @@ import csv
 from pathlib import Path
 import shutil
 import sys
-import tempfile
 
-from git_secret_scanner import console, scm, scanners, report
-
-
-# directory name of the temporary directory used by the tool to clone repositories
-TEMP_DIR_NAME = 'github.padok.git-secret-scanner'
+from git_secret_scanner import console
+from git_secret_scanner.report import ReportColumn, ReportSecret
+from git_secret_scanner.scanners import GitleaksScanner, TrufflehogScanner
+from git_secret_scanner.scm import GitScm
 
 
 # reports may contain very large secrets
@@ -20,14 +18,14 @@ TEMP_DIR_NAME = 'github.padok.git-secret-scanner'
 csv.field_size_limit(sys.maxsize)
 
 
-class Context:
+class Scan:
     def __init__(self: Self,
         report_path: str,
         clone_path: str,
         no_clean_up: bool,
-        fingerprints_ignore_path: str,
-        baseline_path: str,
-        git_scm: scm.GitScm,
+        fingerprints_ignore_path: str | None,
+        baseline_path: str | None,
+        git_scm: GitScm,
     ) -> None:
         self.report_path = report_path
         self.clone_path = clone_path
@@ -36,155 +34,139 @@ class Context:
         self.fingerprints_ignore_path = fingerprints_ignore_path
         self.git_scm = git_scm
 
+    def __repository_scan(self: Self, repo: str) -> set[ReportSecret]:
+        destination = f'{self.clone_path}/{repo}'
 
-def repository_scan(
-    repo: str,
-    clone_path: str,
-    git_scm: scm.GitScm,
-) -> set[report.Secret]:
-    destination = f'{clone_path}/{repo}'
+        # check if repository has already been scanned
+        if Path(destination).exists():
+            console.print('Repository '+repo+' already scanned !')
+            return set()
 
-    # check if repository has already been scanned
-    if Path(destination).exists():
-        console.print('Repository '+repo+' already scanned !')
-        return set()
+        # clone repositories and run the tools
+        self.git_scm.clone_repo(
+            repo=repo,
+            destination=destination,
+            shallow_clone=True,
+        )
 
-    # clone repositories and run the tools
-    git_scm.clone_repo(
-        repo=repo,
-        destination=destination,
-        shallow_clone=True,
-    )
+        trufflehog = TrufflehogScanner(destination, repo)
+        trufflehog.scan()
+        trufflehog_results = trufflehog.get_results()
 
-    trufflehog = scanners.TrufflehogScanner(destination, repo)
-    trufflehog.scan()
-    trufflehog_results = trufflehog.get_results()
+        gitleaks = GitleaksScanner(destination, repo)
+        gitleaks.scan()
+        gitleaks_results = gitleaks.get_results()
 
-    gitleaks = scanners.GitleaksScanner(destination, repo)
-    gitleaks.scan()
-    gitleaks_results = gitleaks.get_results()
+        trufflehog_set = set(trufflehog_results)
+        gitleaks_set = set(gitleaks_results)
 
-    trufflehog_set = set(trufflehog_results)
-    gitleaks_set = set(gitleaks_results)
+        results = trufflehog_set ^ gitleaks_set
+        intersect = trufflehog_set & gitleaks_set
 
-    results = trufflehog_set ^ gitleaks_set
-    intersect = trufflehog_set & gitleaks_set
+        for secret in intersect:
+            t_secret = (trufflehog_results & {secret}).pop()
+            g_secret = (gitleaks_results & {secret}).pop()
+            results.add(ReportSecret.merge(t_secret, g_secret))
 
-    for secret in intersect:
-        t_secret = (trufflehog_results & {secret}).pop()
-        g_secret = (gitleaks_results & {secret}).pop()
-        results.add(report.Secret.merge(t_secret, g_secret))
-
-    return results
+        return results
 
 
-def run(context: Context) -> None:  # noqa: PLR0912, PLR0915
-    # retrieve fingerprints to ignore from the scan
-    ignored_fingerprints: set[str] = set()
-    if len(context.fingerprints_ignore_path) > 0:
+    def run(self: Self) -> None:  # noqa: PLR0912
+        # retrieve fingerprints to ignore from the scan
+        ignored_fingerprints: set[str] = set()
+        if self.fingerprints_ignore_path is not None:
+            try:
+                with Path(self.fingerprints_ignore_path).open('r') as fingerprints_ignore_file:
+                    ignored_fingerprints = {
+                        fingerprint.rstrip() for fingerprint in fingerprints_ignore_file
+                    }
+            except FileNotFoundError as error:
+                console.exit_with_error('Failed to open fingerprints ingore file', error)
+
+        # retrieve the baseline
+        baseline: set[ReportSecret] = set()
+        if self.baseline_path is not None:
+            try:
+                with Path(self.baseline_path).open('r') as baseline_file:
+                    csv_reader = csv.DictReader(baseline_file)
+                    for secret in csv_reader:
+                        baseline.add(
+                            ReportSecret(
+                                repository=secret[ReportColumn.Repository],
+                                path=secret[ReportColumn.Path],
+                                kind=secret[ReportColumn.Kind],
+                                line=(int(secret[ReportColumn.Line])
+                                    if secret[ReportColumn.Line] != ''
+                                    else None),
+                                valid=(bool(secret[ReportColumn.Valid])
+                                    if secret[ReportColumn.Valid] != ''
+                                    else None),
+                                cleartext=(secret[ReportColumn.Cleartext]
+                                    if ReportColumn.Cleartext in secret
+                                    else None),
+                                fingerprint=secret['fingerprint'],
+                            ),
+                        )
+            except FileNotFoundError as error:
+                console.exit_with_error('Failed to open baseline file', error)
+
+        repos = []
+
         try:
-            with Path(context.fingerprints_ignore_path).open('r') as fingerprints_ignore_file:
-                ignored_fingerprints = {
-                    fingerprint.rstrip() for fingerprint in fingerprints_ignore_file
-                }
-        except FileNotFoundError as error:
-            console.exit_with_error('Failed to open fingerprints ingore file', error)
-
-    # retrieve the baseline
-    baseline: set[report.Secret] = set()
-    if len(context.baseline_path) > 0:
-        try:
-            with Path(context.baseline_path).open('r') as baseline_file:
-                csv_reader = csv.DictReader(baseline_file)
-                for secret in csv_reader:
-                    baseline.add(
-                        report.Secret(
-                            repository=secret[report.Column.Repository],
-                            path=secret[report.Column.Path],
-                            kind=secret[report.Column.Kind],
-                            line=(int(secret[report.Column.Line])
-                                if len(secret[report.Column.Line]) > 0
-                                else None),
-                            valid=(bool(secret[report.Column.Valid])
-                                if len(secret[report.Column.Valid]) > 0
-                                else None),
-                            cleartext=(secret[report.Column.Cleartext]
-                                if report.Column.Cleartext in secret
-                                else None),
-                            fingerprint=secret['fingerprint'],
-                        ),
-                    )
-        except FileNotFoundError as error:
-            console.exit_with_error('Failed to open baseline file', error)
-
-    repos = []
-
-    try:
-        with console.ProgressSpinner(
-            f'Listing {context.git_scm.organization} repositories...',
-        ) as progress:
-            repos = context.git_scm.list_repos()
-    except Exception as error:
-        console.exit_with_error('Failed to list repositories', error)
-
-    # create tmp directory for cloned repositories
-    clone_path = context.clone_path
-    if clone_path == '':
-        clone_path = f'{tempfile.gettempdir()}/{TEMP_DIR_NAME}'
-
-    if not Path(clone_path).exists():
-        Path(clone_path).mkdir(parents=True)
-
-    # setup the report file with columns
-    if not Path(context.report_path).exists():
-        with Path(context.report_path).open('w', newline='') as report_file:
-            csv_writer = csv.writer(report_file)
-            csv_writer.writerow(list(report.Column))
-
-    try:
-        with console.ProgressBar('Scanning repositories...', len(repos)) as progress: # noqa: SIM117
-            # submit tasks to the thread pool
-            with futures.ThreadPoolExecutor(max_workers=5) as executor:
-                scan_futures = [
-                    executor.submit(
-                        repository_scan,
-                        repo,
-                        clone_path,
-                        context.git_scm,
-                    ) for repo in repos
-                ]
-
-                # iterate over completed futures that are yielded
-                for future in futures.as_completed(scan_futures):
-                    try:
-                        # check that the future did not raise an exception
-                        # and retrieve the results from the scan
-                        results = future.result()
-
-                        # append the results to the report
-                        with Path(context.report_path).open('a', newline='') as report_file:
-                            csv_writer = csv.writer(report_file)
-                            # only add secrets that are not already in the baseline
-                            for result in results - baseline:
-                                # only add secret in report if its fingerprint is not ignored
-                                if result.fingerprint not in ignored_fingerprints:
-                                    csv_writer.writerow(result.to_row())
-
-                        # update progress
-                        progress.update(1)
-                    except Exception as error:  # noqa: PERF203
-                        # if the future is canceled, it is intended and not an error
-                        if not isinstance(error, futures.CancelledError):
-                            # cancel remaning futures on error
-                            executor.shutdown(wait=True, cancel_futures=True)
-                            raise
-    except Exception as error:
-        console.exit_with_error('Scan failed', error)
-
-    # delete cloned repositories when cleanup is not disabled
-    if not context.no_clean_up:
-        try:
-            with console.ProgressSpinner('Cleaning up cloned repositories...') as progress:
-                    shutil.rmtree(clone_path)
+            with console.ProgressSpinner(
+                f'Listing {self.git_scm.organization} repositories...',
+            ) as progress:
+                repos = self.git_scm.list_repos()
         except Exception as error:
-            console.exit_with_error('Failed to perform cleanup', error)
+            console.exit_with_error('Failed to list repositories', error)
+
+        # create clone path if missing
+        if not Path(self.clone_path).exists():
+            Path(self.clone_path).mkdir(parents=True)
+
+        # setup the report file with columns
+        if not Path(self.report_path).exists():
+            with Path(self.report_path).open('w', newline='') as report_file:
+                csv_writer = csv.writer(report_file)
+                csv_writer.writerow(list(ReportColumn))
+
+        try:
+            with console.ProgressBar('Scanning repositories...', len(repos)) as progress: # noqa: SIM117, E501
+                # submit tasks to the thread pool
+                with futures.ThreadPoolExecutor(max_workers=5) as executor:
+                    scan_futures = [executor.submit(self.__repository_scan, repo) for repo in repos]
+
+                    # iterate over completed futures that are yielded
+                    for future in futures.as_completed(scan_futures):
+                        try:
+                            # check that the future did not raise an exception
+                            # and retrieve the results from the scan
+                            results = future.result()
+
+                            # append the results to the report
+                            with Path(self.report_path).open('a', newline='') as report_file:
+                                csv_writer = csv.writer(report_file)
+                                # only add secrets that are not already in the baseline
+                                for result in results - baseline:
+                                    # only add secret in report if its fingerprint is not ignored
+                                    if result.fingerprint not in ignored_fingerprints:
+                                        csv_writer.writerow(result.to_row())
+
+                            # update progress
+                            progress.update(1)
+                        except Exception as error:  # noqa: PERF203
+                            # if the future is canceled, it is intended and not an error
+                            if not isinstance(error, futures.CancelledError):
+                                # cancel remaning futures on error
+                                executor.shutdown(wait=True, cancel_futures=True)
+                                raise
+        except Exception as error:
+            console.exit_with_error('Scan failed', error)
+
+        # delete cloned repositories when cleanup is not disabled
+        if not self.no_clean_up:
+            try:
+                with console.ProgressSpinner('Cleaning up cloned repositories...') as progress:
+                        shutil.rmtree(self.clone_path)
+            except Exception as error:
+                console.exit_with_error('Failed to perform cleanup', error)

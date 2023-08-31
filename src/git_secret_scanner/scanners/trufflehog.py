@@ -4,7 +4,7 @@ from typing import Self, Any
 import json
 import subprocess
 
-from git_secret_scanner import report
+from git_secret_scanner.report import ReportSecret
 
 from .scanner import BaseScanner
 
@@ -69,7 +69,7 @@ class TrufflehogScanner(BaseScanner):
                 raw_item,
                 object_hook=TrufflehogReportItem.from_json,
             )
-            result = report.Secret(
+            result = ReportSecret(
                 repository=self.repository,
                 path=item.file.removeprefix(f'{self.directory}/'),
                 kind=item.detector_name,

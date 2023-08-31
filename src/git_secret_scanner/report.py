@@ -6,7 +6,7 @@ import enum
 import hashlib
 
 
-class Column(enum.StrEnum):
+class ReportColumn(enum.StrEnum):
     Repository = 'repository'
     Path = 'path'
     Kind = 'kind'
@@ -16,7 +16,7 @@ class Column(enum.StrEnum):
     Fingerprint = 'fingerprint'
 
 
-class Secret:
+class ReportSecret:
     def __init__(self: Self,
         repository: str,
         path: str,
@@ -64,7 +64,7 @@ class Secret:
     def __hash__(self: Self) -> int:
         return hash((self.repository, self.path, self.fingerprint))
 
-    def __eq__(self: Self, other: Secret) -> bool:
+    def __eq__(self: Self, other: ReportSecret) -> bool:
         if not isinstance(other, type(self)):
             raise NotImplementedError
         return self.repository == other.repository \
@@ -101,9 +101,9 @@ class Secret:
             f'fingerprint={self.fingerprint})')
 
     @staticmethod
-    def merge(first: Secret, second: Secret) -> Secret:
+    def merge(first: ReportSecret, second: ReportSecret) -> ReportSecret:
         if first == second:
-            return Secret(
+            return ReportSecret(
                 repository=first.repository,
                 path=first.path,
                 kind=(first.kind if first.kind != 'GenericApiKey' else second.kind),

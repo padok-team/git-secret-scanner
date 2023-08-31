@@ -5,7 +5,7 @@ import json
 from pathlib import Path
 import subprocess
 
-from git_secret_scanner import report
+from git_secret_scanner.report import ReportSecret
 
 from .scanner import BaseScanner
 
@@ -93,7 +93,7 @@ class GitleaksScanner(BaseScanner):
         )
 
         for item in scan_results:
-            result = report.Secret(
+            result = ReportSecret(
                 repository=self.repository,
                 path=item.file.removeprefix(f'{self.directory}/'),
                 kind=self.__map_rule(item.rule_id),
