@@ -8,7 +8,7 @@ import shutil
 import sys
 import tempfile
 
-from . import console, scm, scanners, report
+from git_secret_scanner import console, scm, scanners, report
 
 
 # directory name of the temporary directory used by the tool to clone repositories

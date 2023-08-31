@@ -4,7 +4,7 @@ import os
 import shutil
 import typer
 
-from . import console, scm, scan
+from git_secret_scanner import console, scm, scan
 
 
 REQUIREMENTS=('git', 'trufflehog', 'gitleaks')

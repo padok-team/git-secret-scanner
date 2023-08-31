@@ -1,6 +1,6 @@
 import sys
 
-from .cli import cli
+from git_secret_scanner.cli import cli
 
 
 if __name__ == '__main__':
