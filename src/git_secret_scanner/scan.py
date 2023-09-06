@@ -1,4 +1,3 @@
-from __future__ import annotations
 from typing import Self
 
 from concurrent import futures
@@ -114,7 +113,7 @@ class Scan:
 
         repos = []
 
-        with console.ProgressSpinner(f'Listing {self.git_scm.organization} repositories...') as progress:  # noqa: E501
+        with console.ProgressSpinner(f'Listing {self.git_scm.organization} repositories...') as progress:
             repos = self.git_scm.list_repos()
 
         # create clone path if missing
@@ -127,7 +126,7 @@ class Scan:
                 csv_writer = csv.writer(report_file)
                 csv_writer.writerow(list(ReportColumn))
 
-        with console.ProgressBar('Scanning repositories...', len(repos)) as progress: # noqa: SIM117, E501
+        with console.ProgressBar('Scanning repositories...', len(repos)) as progress: # noqa: SIM117
             # submit tasks to the thread pool
             with futures.ThreadPoolExecutor(max_workers=5) as executor:
                 scan_futures = {

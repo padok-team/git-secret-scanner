@@ -10,7 +10,6 @@ from git_secret_scanner.report import ReportSecret
 from .scanner import BaseScanner
 
 
-
 GITLEAKS_TO_TRUFFLEHOG = {
     'slack-web-hook': 'SlackWebhook',
     'generic-api-key': 'GenericApiKey',

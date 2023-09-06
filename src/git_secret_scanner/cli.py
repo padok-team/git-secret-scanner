@@ -57,7 +57,7 @@ baseline_path_option = typer.Option('--baseline-path', '-b',
 fingerprints_ignore_path_option = typer.Option('--fingerprints-ignore-path', '-i',
     metavar='<path>',
     show_default=False,
-    help='Path to file with newline separated fingerprints (SHA-256) of secrets to ignore during the scan.',  # noqa: E501
+    help='Path to file with newline separated fingerprints (SHA-256) of secrets to ignore during the scan.',
 )
 
 
@@ -65,13 +65,13 @@ def scm_command(scm_cls: type[GitScm], token_var: str) -> Callable[[Callable], C
     def inner(fn: Callable) -> Callable:
         def wrapper(
             org: Annotated[str, org_option],
-            visibility: Annotated[RepositoryVisibility, visibility_option] = RepositoryVisibility.All,  # noqa: E501
+            visibility: Annotated[RepositoryVisibility, visibility_option] = RepositoryVisibility.All,
             no_archived: Annotated[bool, no_archived_option] = False,
             report_path: Annotated[str, report_path_option] = 'report.csv',
             clone_path: Annotated[Optional[str], clone_path_option] = None,
             no_clean_up: Annotated[bool, no_clean_up_option] = False,
             ssh_clone: Annotated[bool, ssh_clone_option] = False,
-            fingerprints_ignore_path: Annotated[Optional[str], fingerprints_ignore_path_option] = None,  # noqa: E501
+            fingerprints_ignore_path: Annotated[Optional[str], fingerprints_ignore_path_option] = None,
             baseline_path: Annotated[Optional[str], baseline_path_option] = None,
         ) -> None:
             # look for the required 'token_var' environment variable

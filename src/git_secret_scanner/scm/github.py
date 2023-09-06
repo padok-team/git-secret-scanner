@@ -1,4 +1,3 @@
-from __future__ import annotations
 from typing import Self
 
 from github import Github as PyGithub
