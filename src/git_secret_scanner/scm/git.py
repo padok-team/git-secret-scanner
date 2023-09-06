@@ -28,7 +28,7 @@ class GitScm:
         organization: str,
         visibility: RepositoryVisibility,
         include_archived: bool,
-        server: str,
+        server: str = '',
         protocol: GitProtocol = GitProtocol.Https,
         token: str = '',
     ) -> None:
