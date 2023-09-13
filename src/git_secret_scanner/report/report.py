@@ -5,6 +5,8 @@ import enum
 
 import hashlib
 
+from .kind import SecretKind
+
 
 class ReportColumn(enum.StrEnum):
     Repository = 'repository'
@@ -20,7 +22,7 @@ class ReportSecret:
     def __init__(self: Self,
         repository: str,
         path: str,
-        kind: str,
+        kind: SecretKind,
         line: int | None,
         valid: bool | None,
         cleartext: str | None,
@@ -70,8 +72,8 @@ class ReportSecret:
         return self.repository == other.repository \
             and self.path == other.path \
             and (self.kind == other.kind
-                or self.kind == 'GenericApiKey'
-                or other.kind == 'GenericApiKey')  \
+                or self.kind == SecretKind.Generic
+                or other.kind == SecretKind.Generic)  \
             and (self.line == other.line
                 or self.line is None
                 or other.line is None) \
@@ -106,7 +108,7 @@ class ReportSecret:
             return ReportSecret(
                 repository=first.repository,
                 path=first.path,
-                kind=(first.kind if first.kind != 'GenericApiKey' else second.kind),
+                kind=(first.kind if first.kind != SecretKind.Generic else second.kind),
                 line=(first.line if first.line is not None else second.line),
                 valid=(first.valid if first.valid is not None else second.valid),
                 cleartext=first.cleartext,

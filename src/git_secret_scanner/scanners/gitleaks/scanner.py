@@ -5,27 +5,10 @@ import json
 from pathlib import Path
 import subprocess
 
-from git_secret_scanner.report import ReportSecret
+from git_secret_scanner.report import ReportSecret, SecretKind
+from git_secret_scanner.scanners.base import BaseScanner
 
-from .scanner import BaseScanner
-
-
-GITLEAKS_TO_TRUFFLEHOG = {
-    'slack-web-hook': 'SlackWebhook',
-    'generic-api-key': 'GenericApiKey',
-    'github-pat': 'Github',
-    'jwt': 'JWT',
-    'flickr-access-token': 'Flickr',
-    'aws-access-token': 'AWS',
-    'twilio-api-key': 'Twilio',
-    'slack-access-token': 'Slack',
-    'facebook': 'FacebookOAuth',
-    'private-key': 'PrivateKey',
-    'gcp-api-key': 'GoogleCloudApiKey',
-    'mailgun-signing-key': 'MailgunSignKey',
-    'mailgun-pub-key': 'MailgunPublicKey',
-    'mailgun-private-api-token': 'MailgunApiToken',
-}
+from .mapping import GITLEAKS_RULE_TO_SECRET_KIND
 
 
 class GitleaksReportItem:
@@ -51,8 +34,10 @@ class GitleaksReportItem:
 
 
 class GitleaksScanner(BaseScanner):
-    def __map_rule(self: Self, rule: str) -> str:
-        return GITLEAKS_TO_TRUFFLEHOG[rule] if rule in GITLEAKS_TO_TRUFFLEHOG else rule
+    def __map_rule(self: Self, rule: str) -> SecretKind:
+        return (GITLEAKS_RULE_TO_SECRET_KIND[rule]
+            if rule in GITLEAKS_RULE_TO_SECRET_KIND
+            else SecretKind.Generic)
 
     def scan(self: Self) -> None:
         report_path = Path(self.directory) / 'gitleaks.json'

@@ -4,9 +4,10 @@ from typing import Self, Any
 import json
 import subprocess
 
-from git_secret_scanner.report import ReportSecret
+from git_secret_scanner.report import ReportSecret, SecretKind
+from git_secret_scanner.scanners.base import BaseScanner
 
-from .scanner import BaseScanner
+from .mapping import TRUFFLEHOG_DETECTOR_TO_SECRET_KIND
 
 
 class TrufflehogReportItem:
@@ -40,6 +41,11 @@ class TrufflehogReportItem:
 
 
 class TrufflehogScanner(BaseScanner):
+    def __map_detector(self: Self, detector: str) -> SecretKind:
+        return (TRUFFLEHOG_DETECTOR_TO_SECRET_KIND[detector]
+            if detector in TRUFFLEHOG_DETECTOR_TO_SECRET_KIND
+            else SecretKind.Generic)
+
     def scan(self: Self) -> None:
         proc = subprocess.run([  # noqa: S603, S607
                 # truffle filesystem is no longer used as it does not compute line numbers
@@ -72,7 +78,7 @@ class TrufflehogScanner(BaseScanner):
             result = ReportSecret(
                 repository=self.repository,
                 path=item.file.removeprefix(f'{self.directory}/'),
-                kind=item.detector_name,
+                kind=self.__map_detector(item.detector_name),
                 line=item.line,
                 valid=item.verified,
                 cleartext=item.raw,

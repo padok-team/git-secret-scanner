@@ -7,7 +7,7 @@ import shutil
 import sys
 
 from git_secret_scanner import console
-from git_secret_scanner.report import ReportColumn, ReportSecret
+from git_secret_scanner.report import ReportColumn, ReportSecret, SecretKind
 from git_secret_scanner.scanners import GitleaksScanner, TrufflehogScanner
 from git_secret_scanner.scm import GitScm
 
@@ -94,7 +94,7 @@ class Scan:
                             ReportSecret(
                                 repository=secret[ReportColumn.Repository],
                                 path=secret[ReportColumn.Path],
-                                kind=secret[ReportColumn.Kind],
+                                kind=SecretKind[secret[ReportColumn.Kind].lower().capitalize()],
                                 line=(int(secret[ReportColumn.Line])
                                     if secret[ReportColumn.Line] != ''
                                     else None),
