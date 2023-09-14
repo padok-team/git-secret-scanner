@@ -25,19 +25,21 @@ class TrufflehogReportItem:
         self.raw = raw
 
     @staticmethod
-    def from_json(json_dict: dict[str, Any]) -> TrufflehogReportItem:
-        return TrufflehogReportItem(
-            file=json_dict['SourceMetadata']['Data']['Git']['file'],
-            line=(json_dict['SourceMetadata']['Data']['Git']['line']
-                if 'line' in json_dict['SourceMetadata']['Data']['Git']
-                else None),
-            detector_name=json_dict['DetectorName'],
-            verified=(json_dict['Verified']
-                # validity checks are not relevent on PrivateKeys
-                if len(str(json_dict['Verified'])) > 0 and json_dict['DetectorName'] != 'PrivateKey'
-                else None),
-            raw=json_dict['Raw'],
-        )
+    def from_json(json_dict: dict[str, Any]) -> TrufflehogReportItem | dict[str, Any]:
+        if 'SourceMetadata' in json_dict:
+            return TrufflehogReportItem(
+                file=json_dict['SourceMetadata']['Data']['Git']['file'],
+                line=(json_dict['SourceMetadata']['Data']['Git']['line']
+                    if 'line' in json_dict['SourceMetadata']['Data']['Git']
+                    else None),
+                detector_name=json_dict['DetectorName'],
+                verified=(json_dict['Verified']
+                    # validity checks are not relevent on PrivateKeys
+                    if len(str(json_dict['Verified'])) > 0 and json_dict['DetectorName'] != 'PrivateKey'
+                    else None),
+                raw=json_dict['Raw'],
+            )
+        return json_dict
 
 
 class TrufflehogScanner(BaseScanner):
