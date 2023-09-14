@@ -1,14 +1,28 @@
 from __future__ import annotations
+from typing import Self
+
+import enum
 
 import hashlib
 
+from .kind import SecretKind
 
-class SecretReport():
-    def __init__(
-        self,
+
+class ReportColumn(enum.StrEnum):
+    Repository = 'repository'
+    Path = 'path'
+    Kind = 'kind'
+    Line = 'line'
+    Valid = 'valid'
+    Cleartext = 'cleartext'
+    Fingerprint = 'fingerprint'
+
+
+class ReportSecret:
+    def __init__(self: Self,
         repository: str,
         path: str,
-        kind: str,
+        kind: SecretKind,
         line: int | None,
         valid: bool | None,
         cleartext: str | None,
@@ -32,22 +46,34 @@ class SecretReport():
                     # gitleaks and trufflhog do not keep as many "-" in the cleartext of PrivateKeys
                     # we strip them to make sure we end up with the same fingerprints
                     .strip('-')
-                    .encode('utf-8')
+                    .encode('utf-8'),
             ).hexdigest()
         elif fingerprint is None and cleartext is None:
-            raise AttributeError('SecretReport cannot have both "None" cleartext and fingerprint')
+            msg = 'SecretReport cannot have both "None" cleartext and fingerprint'
+            raise AttributeError(msg)
 
-    def __hash__(self) -> int:
+    def to_row(self: Self) -> list:
+        return [
+            self.repository,
+            self.path,
+            self.kind,
+            self.line,
+            self.valid,
+            self.cleartext,
+            self.fingerprint,
+        ]
+
+    def __hash__(self: Self) -> int:
         return hash((self.repository, self.path, self.fingerprint))
 
-    def __eq__(self, other) -> bool:
+    def __eq__(self: Self, other: ReportSecret) -> bool:
         if not isinstance(other, type(self)):
             raise NotImplementedError
         return self.repository == other.repository \
             and self.path == other.path \
             and (self.kind == other.kind
-                or self.kind == 'GenericApiKey'
-                or other.kind == 'GenericApiKey')  \
+                or self.kind == SecretKind.Generic
+                or other.kind == SecretKind.Generic)  \
             and (self.line == other.line
                 or self.line is None
                 or other.line is None) \
@@ -56,7 +82,7 @@ class SecretReport():
                 or other.valid is None) \
             and self.fingerprint == other.fingerprint
 
-    def __str__(self) -> str:
+    def __str__(self: Self) -> str:
         return ('SecretReport('
             f'repository={self.repository},'
             f'path={self.path},'
@@ -66,7 +92,7 @@ class SecretReport():
             f'cleartext={self.cleartext},'
             f'fingerprint={self.fingerprint})')
 
-    def __repr__(self) -> str:
+    def __repr__(self: Self) -> str:
         return ('SecretReport('
             f'repository={self.repository},'
             f'path={self.path},'
@@ -77,15 +103,16 @@ class SecretReport():
             f'fingerprint={self.fingerprint})')
 
     @staticmethod
-    def merge(first: SecretReport, second: SecretReport) -> SecretReport:
+    def merge(first: ReportSecret, second: ReportSecret) -> ReportSecret:
         if first == second:
-            return SecretReport(
+            return ReportSecret(
                 repository=first.repository,
                 path=first.path,
-                kind=(first.kind if first.kind != 'GenericApiKey' else second.kind),
+                kind=(first.kind if first.kind != SecretKind.Generic else second.kind),
                 line=(first.line if first.line is not None else second.line),
                 valid=(first.valid if first.valid is not None else second.valid),
                 cleartext=first.cleartext,
                 fingerprint=first.fingerprint,
             )
-        raise AttributeError('non equal secrets cannot be merged')
+        msg = 'non equal secrets cannot be merged'
+        raise AttributeError(msg)
