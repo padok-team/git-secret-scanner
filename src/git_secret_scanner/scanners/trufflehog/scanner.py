@@ -24,10 +24,10 @@ class TrufflehogReportItem:
         self.verified = verified
         self.raw = raw
 
-    @staticmethod
-    def from_json(json_dict: dict[str, Any]) -> TrufflehogReportItem | dict[str, Any]:
+    @classmethod
+    def from_json(cls: type[TrufflehogReportItem], json_dict: dict[str, Any]) -> TrufflehogReportItem | dict[str, Any]:
         if 'SourceMetadata' in json_dict:
-            return TrufflehogReportItem(
+            return cls(
                 file=json_dict['SourceMetadata']['Data']['Git']['file'],
                 line=(json_dict['SourceMetadata']['Data']['Git']['line']
                     if 'line' in json_dict['SourceMetadata']['Data']['Git']

@@ -4,15 +4,12 @@ from functools import update_wrapper
 from inspect import signature
 import os
 import shutil
-import tempfile
 import typer
 
+from git_secret_scanner import constants
 from git_secret_scanner.scan import Scan
 from git_secret_scanner.scm import RepositoryVisibility, GitProtocol, GitScm, Github, Gitlab
 
-
-# directory name of the temporary directory used by the tool
-TEMP_DIR_NAME = 'github.padok.git-secret-scanner'
 
 # required tools that must be found in PATH
 REQUIREMENTS=('git', 'trufflehog', 'gitleaks')
@@ -90,9 +87,7 @@ def scm_command(scm_cls: type[GitScm], token_var: str) -> Callable[[Callable], C
 
             scan = Scan(
                 report_path=report_path,
-                clone_path=(f'{tempfile.gettempdir()}/{TEMP_DIR_NAME}'
-                    if clone_path is None
-                    else clone_path),
+                clone_path=(constants.DEFAULT_CLONE_PATH if clone_path is None else clone_path),
                 no_clean_up=no_clean_up,
                 fingerprints_ignore_path=fingerprints_ignore_path,
                 baseline_path=baseline_path,

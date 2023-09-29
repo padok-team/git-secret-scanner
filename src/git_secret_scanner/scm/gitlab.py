@@ -22,10 +22,10 @@ class Gitlab(GitScm):
             protocol,
             token,
         )
+        self._gitlab = PythonGitlab(url=f'https://{server}', private_token=token)
 
-    def list_repos(self: Self) -> list[str]:
-        gitlab = PythonGitlab(url=f'https://{self.server}', private_token=self._token)
-        group = gitlab.groups.get(self.organization)
+    def list_repos(self: Self) -> set[str]:
+        group = self._gitlab.groups.get(self.organization)
 
         projects = group.projects.list(
             visibility=self.visibility.gitlab_conv(),
@@ -34,4 +34,4 @@ class Gitlab(GitScm):
             iterator=True,
         )
 
-        return [repo.path_with_namespace for repo in projects]
+        return {repo.path_with_namespace for repo in projects}

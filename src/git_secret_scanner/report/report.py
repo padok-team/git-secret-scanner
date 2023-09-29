@@ -1,11 +1,14 @@
 from __future__ import annotations
-from typing import Self
+from typing import Self, Any
+from types import TracebackType
 
 import enum
 
+import csv
 import hashlib
+from pathlib import Path
 
-from .kind import SecretKind
+from .secret_kind import SecretKind
 
 
 class ReportColumn(enum.StrEnum):
@@ -16,6 +19,47 @@ class ReportColumn(enum.StrEnum):
     Valid = 'valid'
     Cleartext = 'cleartext'
     Fingerprint = 'fingerprint'
+
+
+def read_report(path: str) -> set[ReportSecret]:
+    if Path(path).exists():
+        with Path(path).open('r') as file:
+            try:
+                if ','.join(list(ReportColumn)) not in file.readline():
+                    msg = f'file {path} is not a valid report file: wrong header'
+                    raise ValueError(msg)
+                reader = csv.DictReader(file, fieldnames=list(ReportColumn))
+                return {ReportSecret.from_dict(secret) for secret in reader}
+            except csv.Error as error:
+                msg = f'file {path} is not a valid report file'
+                raise ValueError(msg) from error
+    msg = f'report file {path} does not exist'
+    raise FileExistsError(msg)
+
+
+class ReportWriter:
+    def __init__(self: Self, path: str, force_recreate: bool = False) -> None:
+        self.__file = Path(path).open('w+' if force_recreate else 'a+', newline='')  # noqa: SIM115
+        self.writer = csv.DictWriter(self.__file, fieldnames=list(ReportColumn))
+        self.__write_header()
+
+    def __write_header(self: Self) -> None:
+        if self.__file.tell() == 0:
+            self.writer.writeheader()
+
+    def add_secret(self: Self, secret: ReportSecret) -> None:
+        self.writer.writerow(secret.to_dict())
+
+    def __enter__(self: Self) -> Self:
+        return self
+
+    def __exit__(self: Self,
+        exc_type: type[BaseException] | None,
+        exc_val: BaseException | None,
+        exc_tb: TracebackType | None,
+    ) -> bool:
+        self.__file.close()
+        return False
 
 
 class ReportSecret:
@@ -52,16 +96,16 @@ class ReportSecret:
             msg = 'SecretReport cannot have both "None" cleartext and fingerprint'
             raise AttributeError(msg)
 
-    def to_row(self: Self) -> list:
-        return [
-            self.repository,
-            self.path,
-            self.kind,
-            self.line,
-            self.valid,
-            self.cleartext,
-            self.fingerprint,
-        ]
+    def to_dict(self: Self) -> dict[ReportColumn, Any]:
+        return {
+            ReportColumn.Repository: self.repository,
+            ReportColumn.Path: self.path,
+            ReportColumn.Kind: self.kind,
+            ReportColumn.Line: self.line,
+            ReportColumn.Valid: self.valid,
+            ReportColumn.Cleartext: self.cleartext,
+            ReportColumn.Fingerprint: self.fingerprint,
+        }
 
     def __hash__(self: Self) -> int:
         return hash((self.repository, self.path, self.fingerprint))
@@ -102,10 +146,10 @@ class ReportSecret:
             f'cleartext={self.cleartext},'
             f'fingerprint={self.fingerprint})')
 
-    @staticmethod
-    def merge(first: ReportSecret, second: ReportSecret) -> ReportSecret:
+    @classmethod
+    def merge(cls: type[ReportSecret], first: ReportSecret, second: ReportSecret) -> ReportSecret:
         if first == second:
-            return ReportSecret(
+            return cls(
                 repository=first.repository,
                 path=first.path,
                 kind=(first.kind if first.kind != SecretKind.Generic else second.kind),
@@ -116,3 +160,21 @@ class ReportSecret:
             )
         msg = 'non equal secrets cannot be merged'
         raise AttributeError(msg)
+
+    @classmethod
+    def from_dict(cls: type[ReportSecret], row: dict[ReportColumn, str]) -> ReportSecret:
+        return cls(
+            repository=row[ReportColumn.Repository],
+            path=row[ReportColumn.Path],
+            kind=SecretKind[row[ReportColumn.Kind]],
+            line=(int(row[ReportColumn.Line])
+                if row[ReportColumn.Line] != ''
+                else None),
+            valid=(bool(row[ReportColumn.Valid])
+                if row[ReportColumn.Valid] != ''
+                else None),
+            cleartext=(row[ReportColumn.Cleartext]
+                if ReportColumn.Cleartext in row
+                else None),
+            fingerprint=row[ReportColumn.Fingerprint],
+        )

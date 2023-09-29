@@ -23,9 +23,9 @@ class GitleaksReportItem:
         self.start_line = start_line
         self.secret = secret
 
-    @staticmethod
-    def from_json(json_dict: dict[str, Any]) -> GitleaksReportItem:
-        return GitleaksReportItem(
+    @classmethod
+    def from_json(cls: type[GitleaksReportItem], json_dict: dict[str, Any]) -> GitleaksReportItem:
+        return cls(
             rule_id=json_dict['RuleID'],
             file=json_dict['File'],
             start_line=json_dict['StartLine'],

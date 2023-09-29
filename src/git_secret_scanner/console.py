@@ -2,6 +2,7 @@ from typing import cast, Self, Any
 from types import TracebackType
 
 from rich import console, progress
+from rich.prompt import Confirm
 
 stdout = console.Console()
 stderr = console.Console(stderr=True)
@@ -9,6 +10,14 @@ stderr = console.Console(stderr=True)
 
 def print(message: str) -> None:  # noqa: A001
     stdout.print(message)
+
+
+def warn(message: str) -> None:
+    print(f'[yellow]Warning: {message}[/yellow]')
+
+
+def confirm(message: str) -> bool:
+    return Confirm.ask(message, console=stdout)
 
 
 class Progress(progress.Progress):

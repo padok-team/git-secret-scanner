@@ -3,8 +3,11 @@ from typing import Self
 
 import enum
 
+from pathlib import Path
 import subprocess
 import shutil
+
+from git_secret_scanner import console, constants
 
 
 @enum.unique
@@ -37,7 +40,7 @@ class GitScm:
         self.include_archived = include_archived
         self.server = server
         self.protocol = protocol
-        self._token = token
+        self.__token = token
 
     def clone_repo(self: Self,
         repo: str,
@@ -45,30 +48,33 @@ class GitScm:
         shallow_clone: bool = False,
         no_git: bool = False,
     ) -> None:
-        if self.protocol == GitProtocol.Https:
-            clone_url = f'https://x-access-token:{self._token}@{self.server}/{repo}'
-        else:
-            clone_url = f'git@{self.server}:{repo}'
+        if not Path(destination).exists():
+            if self.protocol == GitProtocol.Https:
+                clone_url = f'https://x-access-token:{self.__token}@{self.server}/{repo}'
+            else:
+                clone_url = f'git@{self.server}:{repo}'
 
-        shallow_args = []
-        if shallow_clone:
-            shallow_args = ['--depth', '1']
+            shallow_args = []
+            if shallow_clone:
+                shallow_args = ['--depth', '1']
 
-        proc = subprocess.run([  # noqa: S603, S607
-                'git', 'clone', '--quiet', *shallow_args, clone_url, destination,
-            ],
-            stdout=subprocess.DEVNULL,
-            stderr=subprocess.PIPE,
-        )
+            proc = subprocess.run([  # noqa: S603, S607
+                    'git', 'clone', '--quiet', *shallow_args, clone_url, destination,
+                ],
+                stdout=subprocess.DEVNULL,
+                stderr=subprocess.PIPE,
+            )
 
-        if no_git:
-            shutil.rmtree(f'{destination}/.git')
+            if no_git:
+                shutil.rmtree(f'{destination}/.git')
 
-        if proc.returncode != 0:
-            error = RuntimeError(f'failed to clone repository {repo}')
-            error.add_note(proc.stderr.decode('utf-8'))
-            raise error
+            if proc.returncode != 0:
+                error = RuntimeError(f'failed to clone repository {repo}')
+                error.add_note(proc.stderr.decode('utf-8'))
+                raise error
+        elif constants.DEFAULT_CLONE_PATH not in destination:
+            console.warn(f'directory {destination} already exists, it will be scanned without cloning.')
 
-    def list_repos(self: Self) -> list[str]:
+    def list_repos(self: Self) -> set[str]:
         msg = '"list_repos()" method not implemented'
         raise NotImplementedError(msg)
