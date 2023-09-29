@@ -46,6 +46,10 @@ no_clean_up_option = typer.Option('--no-clean-up',
 ssh_clone_option = typer.Option('--ssh-clone',
     help='Use SSH to clone repositories instead of HTTPS.',
 )
+server_option = typer.Option('--server',
+    metavar='<hostname>',
+    help='The hostname of the private server (eg. github.com)',
+)
 baseline_path_option = typer.Option('--baseline-path', '-b',
     metavar='<path>',
     show_default=False,
@@ -71,6 +75,7 @@ def scm_command(scm_cls: type[GitScm], token_var: str) -> Callable[[Callable], C
             report_path: Annotated[str, report_path_option] = 'report.csv',
             clone_path: Annotated[Optional[str], clone_path_option] = None,
             no_clean_up: Annotated[bool, no_clean_up_option] = False,
+            server: Annotated[Optional[str], server_option] = None,
             ssh_clone: Annotated[bool, ssh_clone_option] = False,
             fingerprints_ignore_path: Annotated[Optional[str], fingerprints_ignore_path_option] = None,
             baseline_path: Annotated[Optional[str], baseline_path_option] = None,
@@ -87,6 +92,7 @@ def scm_command(scm_cls: type[GitScm], token_var: str) -> Callable[[Callable], C
                 visibility=visibility,
                 include_archived=(not no_archived),
                 protocol=(GitProtocol.Ssh if ssh_clone else GitProtocol.Https),
+                server=server,
                 token=token,
             )
 
@@ -105,12 +111,13 @@ def scm_command(scm_cls: type[GitScm], token_var: str) -> Callable[[Callable], C
         fn_sign = signature(fn)
         wrapper_sign = signature(wrapper)
 
-        params = list(fn_sign.parameters.values())
-        params += [wrapper_sign.parameters[param]
-            for param in wrapper_sign.parameters if param not in fn_sign.parameters]
+        params = dict(wrapper_sign.parameters)
+
+        for param in fn_sign.parameters:
+            params[param] = fn_sign.parameters[param]
 
         updated_wrapper = cast(Callable, update_wrapper(wrapper=wrapper, wrapped=fn))
-        updated_wrapper.__signature__ = wrapper_sign.replace(parameters=params)
+        updated_wrapper.__signature__ = wrapper_sign.replace(parameters=list(params.values()))
 
         return updated_wrapper
     return inner
@@ -126,7 +133,13 @@ def check_requirements(_: typer.Context) -> None:
 
 @cli.command(help="Scan secrets in a GitHub organization's repositories")
 @scm_command(Github, token_var='GITHUB_TOKEN')  # noqa: S106
-def github() -> None:
+def github(
+    server: Annotated[str, typer.Option('--server',  # noqa: ARG001
+        metavar='<hostname>',
+        show_default=False,
+        help='Server name of the GitHub Enterprise private server.',
+    )] = 'github.com',
+) -> None:
     pass
 
 
@@ -138,6 +151,11 @@ def gitlab(
         show_default=False,
         help='Group to scan.',
     )],
+    server: Annotated[str, typer.Option('--server',  # noqa: ARG001
+        metavar='<hostname>',
+        show_default=False,
+        help='Server name of the self-hosted GitLab instance.',
+    )] = 'gitlab.com',
 ) -> None:
     pass
 
