@@ -8,7 +8,7 @@ import sys
 
 from git_secret_scanner import console
 from git_secret_scanner.report import read_report, ReportSecret, ReportWriter
-from git_secret_scanner.scanners import GitleaksScanner, TrufflehogScanner
+from git_secret_scanner.scanners import GitleaksScanner, TrufflehogScanner, is_ignored
 from git_secret_scanner.scm import GitScm
 
 
@@ -64,7 +64,18 @@ class Scan:
             g_secret = (gitleaks_results & {secret}).pop()
             results.add(ReportSecret.merge(t_secret, g_secret))
 
-        return results
+        # now that we have all our secrets, remove secrets ignored by scanners
+        ignored_secrets: set[ReportSecret] = set()
+        for secret in results:
+            path, line = secret.path, secret.line
+            # if no line were reported, skip (this should never happen in theory...)
+            if line:
+                with Path(destination, path).open('r') as file:
+                    for idx, content in enumerate(file):
+                        if idx == line - 1 and is_ignored(content):
+                            ignored_secrets.add(secret)
+
+        return results - ignored_secrets
 
     def __load_ignored_fingerprints(self: Self) -> set[str]:
         if self.fingerprints_ignore_path is not None:
