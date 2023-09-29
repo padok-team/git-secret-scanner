@@ -56,6 +56,10 @@ fingerprints_ignore_path_option = typer.Option('--fingerprints-ignore-path', '-i
     show_default=False,
     help='Path to file with newline separated fingerprints (SHA-256) of secrets to ignore during the scan.',
 )
+max_concurrency_option = typer.Option('--max-concurrency',
+    metavar='<number>',
+    help='Maximum number of concurrent workers.',
+)
 
 
 def scm_command(scm_cls: type[GitScm], token_var: str) -> Callable[[Callable], Callable]:
@@ -70,6 +74,7 @@ def scm_command(scm_cls: type[GitScm], token_var: str) -> Callable[[Callable], C
             ssh_clone: Annotated[bool, ssh_clone_option] = False,
             fingerprints_ignore_path: Annotated[Optional[str], fingerprints_ignore_path_option] = None,
             baseline_path: Annotated[Optional[str], baseline_path_option] = None,
+            max_concurrency: Annotated[int, max_concurrency_option] = 5,
         ) -> None:
             # look for the required 'token_var' environment variable
             token = os.environ.get(token_var)
@@ -91,6 +96,7 @@ def scm_command(scm_cls: type[GitScm], token_var: str) -> Callable[[Callable], C
                 no_clean_up=no_clean_up,
                 fingerprints_ignore_path=fingerprints_ignore_path,
                 baseline_path=baseline_path,
+                max_concurrency=max_concurrency,
                 git_scm=git_scm,
             )
 
