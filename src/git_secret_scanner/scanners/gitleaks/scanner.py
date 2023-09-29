@@ -11,6 +11,9 @@ from git_secret_scanner.scanners.base import BaseScanner
 from .mapping import GITLEAKS_RULE_TO_SECRET_KIND
 
 
+GITLEAKS_IGNORE_TAG = 'gitleaks:allow'
+
+
 class GitleaksReportItem:
     def __init__(self: Self,
         rule_id: str,

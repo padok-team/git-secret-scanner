@@ -10,6 +10,9 @@ from git_secret_scanner.scanners.base import BaseScanner
 from .mapping import TRUFFLEHOG_DETECTOR_TO_SECRET_KIND
 
 
+TRUFFLEHOG_IGNORE_TAG = 'trufflehog:ignore'
+
+
 class TrufflehogReportItem:
     def __init__(self: Self,
         file: str,
