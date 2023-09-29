@@ -1,5 +1,11 @@
-from .kind import SecretKind
-from .report import ReportColumn, ReportSecret
+from .report import read_report, ReportColumn, ReportSecret, ReportWriter
+from .secret_kind import SecretKind
 
 
-__all__ = ['SecretKind', 'ReportColumn', 'ReportSecret']
+__all__ = [
+    'read_report',
+    'ReportWriter',
+    'ReportColumn',
+    'ReportSecret',
+    'SecretKind',
+]

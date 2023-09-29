@@ -7,7 +7,7 @@ import shutil
 import sys
 
 from git_secret_scanner import console
-from git_secret_scanner.report import ReportColumn, ReportSecret, SecretKind
+from git_secret_scanner.report import read_report, ReportSecret, ReportWriter
 from git_secret_scanner.scanners import GitleaksScanner, TrufflehogScanner
 from git_secret_scanner.scm import GitScm
 
@@ -35,11 +35,6 @@ class Scan:
 
     def __repository_scan(self: Self, repo: str) -> set[ReportSecret]:
         destination = f'{self.clone_path}/{repo}'
-
-        # check if repository has already been scanned
-        if Path(destination).exists():
-            console.print('Repository '+repo+' already scanned !')
-            return set()
 
         # clone repositories and run the tools
         self.git_scm.clone_repo(
@@ -69,50 +64,27 @@ class Scan:
 
         return results
 
-
-    def run(self: Self) -> None:
-        # retrieve fingerprints to ignore from the scan
-        ignored_fingerprints: set[str] = set()
+    def __load_ignored_fingerprints(self: Self) -> set[str]:
         if self.fingerprints_ignore_path is not None:
             try:
                 with Path(self.fingerprints_ignore_path).open('r') as fingerprints_ignore_file:
-                    ignored_fingerprints = {
-                        fingerprint.rstrip() for fingerprint in fingerprints_ignore_file
-                    }
+                    return {fingerprint.rstrip() for fingerprint in fingerprints_ignore_file}
             except FileNotFoundError as error:
                 msg = f"fingerprints ignore file not found: '{self.fingerprints_ignore_path}'"
                 raise FileNotFoundError(msg) from error
+        return set()
 
+    def __load_baseline(self: Self) -> set[ReportSecret]:
+        return set() if self.baseline_path is None else read_report(self.baseline_path)
+
+    def run(self: Self) -> None:
+        # retrieve fingerprints to ignore from the scan
+        ignored_fingerprints = self.__load_ignored_fingerprints()
         # retrieve the baseline
-        baseline: set[ReportSecret] = set()
-        if self.baseline_path is not None:
-            try:
-                with Path(self.baseline_path).open('r') as baseline_file:
-                    csv_reader = csv.DictReader(baseline_file)
-                    for secret in csv_reader:
-                        baseline.add(
-                            ReportSecret(
-                                repository=secret[ReportColumn.Repository],
-                                path=secret[ReportColumn.Path],
-                                kind=SecretKind[secret[ReportColumn.Kind].lower().capitalize()],
-                                line=(int(secret[ReportColumn.Line])
-                                    if secret[ReportColumn.Line] != ''
-                                    else None),
-                                valid=(bool(secret[ReportColumn.Valid])
-                                    if secret[ReportColumn.Valid] != ''
-                                    else None),
-                                cleartext=(secret[ReportColumn.Cleartext]
-                                    if ReportColumn.Cleartext in secret
-                                    else None),
-                                fingerprint=secret['fingerprint'],
-                            ),
-                        )
-            except FileNotFoundError as error:
-                msg = f"baseline file not found: '{self.baseline_path}'"
-                raise FileNotFoundError(msg) from error
+        baseline = self.__load_baseline()
 
-        repos = []
-
+        # retrieve the list of all repositories in the organization
+        repos: set[str] = set()
         with console.ProgressSpinner(f'Listing {self.git_scm.organization} repositories...') as progress:
             repos = self.git_scm.list_repos()
 
@@ -120,46 +92,57 @@ class Scan:
         if not Path(self.clone_path).exists():
             Path(self.clone_path).mkdir(parents=True)
 
-        # setup the report file with columns
-        if not Path(self.report_path).exists():
-            with Path(self.report_path).open('w', newline='') as report_file:
-                csv_writer = csv.writer(report_file)
-                csv_writer.writerow(list(ReportColumn))
+        scanned_repos: set[str] = set()
+        if Path(self.report_path).exists() and Path(self.report_path).stat().st_size > 0:
+            scanned_repos = {secret.repository for secret in read_report(self.report_path)}
+
+        # if the report exist and is not empty, ask the user what to do with the current report
+        force_recreate = False
+        if len(scanned_repos) > 0:
+            msg = (f'\nA report "{self.report_path}" already exists. Do you want to override the current report?\n'
+                '   [red]yes[/red]: the current report will be overriden\n'
+                '   [blue]no[/blue]: only repositories missing from the report will be scanned\n')
+            console.print(msg)
+            force_recreate = console.confirm('Choice')
+            console.print('')
+
+        # remove already scanned repos from the scan when force recreate is False
+        if not force_recreate:
+            repos = repos - scanned_repos
 
         with console.ProgressBar('Scanning repositories...', len(repos)) as progress: # noqa: SIM117
             # submit tasks to the thread pool
-            with futures.ThreadPoolExecutor(max_workers=5) as executor:
-                scan_futures = {
-                    executor.submit(self.__repository_scan, repo): repo for repo in repos
-                }
+            with ReportWriter(self.report_path, force_recreate=force_recreate) as report_writer:
+                with futures.ThreadPoolExecutor(max_workers=5) as executor:
+                    scan_futures = {
+                        executor.submit(self.__repository_scan, repo): repo for repo in repos
+                    }
 
-                # iterate over completed futures that are yielded
-                for future in futures.as_completed(scan_futures):
-                    try:
-                        # check that the future did not raise an exception
-                        # and retrieve the results from the scan
-                        results = future.result()
+                    # iterate over completed futures that are yielded
+                    for future in futures.as_completed(scan_futures):
+                        try:
+                            # check that the future did not raise an exception
+                            # and retrieve the results from the scan
+                            results = future.result()
 
-                        # append the results to the report
-                        with Path(self.report_path).open('a', newline='') as report_file:
-                            csv_writer = csv.writer(report_file)
                             # only add secrets that are not already in the baseline
                             for result in results - baseline:
                                 # only add secret in report if its fingerprint is not ignored
                                 if result.fingerprint not in ignored_fingerprints:
-                                    csv_writer.writerow(result.to_row())
+                                    # add the secret to the report
+                                    report_writer.add_secret(result)
 
-                        # update progress
-                        progress.update(1)
-                    except Exception as error:  # noqa: PERF203
-                        # if the future is canceled, it is intended and not an error
-                        if not isinstance(error, futures.CancelledError):
-                            # cancel remaning futures on error
-                            executor.shutdown(wait=True, cancel_futures=True)
-                            msg = f'repository scan failed for {scan_futures[future]}'
-                            raise RuntimeError(msg) from error  # noqa: TRY004
+                            # update progress
+                            progress.update(1)
+                        except Exception as error:  # noqa: PERF203
+                            # if the future is canceled, it is intended and not an error
+                            if not isinstance(error, futures.CancelledError):
+                                # cancel remaning futures on error
+                                executor.shutdown(wait=True, cancel_futures=True)
+                                msg = f'repository scan failed for {scan_futures[future]}'
+                                raise RuntimeError(msg) from error  # noqa: TRY004
 
         # delete cloned repositories when cleanup is not disabled
         if not self.no_clean_up:
             with console.ProgressSpinner('Cleaning up cloned repositories...') as progress:
-                    shutil.rmtree(self.clone_path)
+                shutil.rmtree(self.clone_path)

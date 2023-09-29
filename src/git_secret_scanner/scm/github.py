@@ -22,15 +22,14 @@ class Github(GitScm):
             protocol,
             token,
         )
+        base_url = f'https://api.{server}' if server == 'github.com' else f'https://{server}/api/v3'
+        self._github = PyGithub(token, base_url=base_url)
 
-    def list_repos(self: Self) -> list[str]:
-        base_url = f'https://api.{self.server}' if self.server == 'github.com' else f'https://{self.server}/api/v3'
-        github = PyGithub(self._token, base_url=base_url)
+    def list_repos(self: Self) -> set[str]:
+        repos: set[str] = set()
 
-        repos: list[str] = []
-
-        for repo in github.get_organization(self.organization).get_repos(self.visibility):
+        for repo in self._github.get_organization(self.organization).get_repos(self.visibility):
             if self.include_archived or not repo.archived:
-                repos.append(f'{self.organization}/{repo.name}')  # noqa: PERF401
+                repos.add(f'{self.organization}/{repo.name}')
 
         return repos
