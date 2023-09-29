@@ -24,6 +24,7 @@ class Scan:
         no_clean_up: bool,
         fingerprints_ignore_path: str | None,
         baseline_path: str | None,
+        max_concurrency: int,
         git_scm: GitScm,
     ) -> None:
         self.report_path = report_path
@@ -31,6 +32,7 @@ class Scan:
         self.no_clean_up = no_clean_up
         self.baseline_path = baseline_path
         self.fingerprints_ignore_path = fingerprints_ignore_path
+        self.max_concurrency = max_concurrency
         self.git_scm = git_scm
 
     def __repository_scan(self: Self, repo: str) -> set[ReportSecret]:
@@ -113,7 +115,7 @@ class Scan:
         with console.ProgressBar('Scanning repositories...', len(repos)) as progress: # noqa: SIM117
             # submit tasks to the thread pool
             with ReportWriter(self.report_path, force_recreate=force_recreate) as report_writer:
-                with futures.ThreadPoolExecutor(max_workers=5) as executor:
+                with futures.ThreadPoolExecutor(max_workers=self.max_concurrency) as executor:
                     scan_futures = {
                         executor.submit(self.__repository_scan, repo): repo for repo in repos
                     }
