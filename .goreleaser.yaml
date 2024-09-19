@@ -1,0 +1,60 @@
+version: 2
+
+checksum:
+  name_template: checksums.txt
+
+snapshot:
+  version_template: '{{ .Tag }}'
+
+changelog:
+  sort: asc
+  use: github
+  groups:
+    - title: Features
+      regexp: "^.*(feat:|feat\\/|feat(\\([^\\)]*\\)):).*"
+      order: 0
+    - title: 'Bug fixes'
+      regexp: "^.*(fix:|fix\\/|fix(\\([^\\)]*\\)):).*"
+      order: 1
+    - title: Others
+      order: 999
+  filters:
+    exclude:
+      - '^docs'
+      - '^test'
+      - '^style'
+      - '^refactor'
+      - '^build'
+      - '^ci'
+      - '^chore(release)'
+
+before:
+  hooks:
+    - go mod tidy
+
+builds:
+  - binary: git-secret-scanner
+    main: main.go
+    env:
+      - CGO_ENABLED=0
+      - PACKAGE=github.com/padok-team/git-secret-scanner
+      - VERSION={{ if index .Env "VERSION"  }}{{ .Env.VERSION }}{{ else }}{{ .ShortCommit }}{{ end }}
+    ldflags:
+      - -X {{ .Env.PACKAGE }}/cmd.Version={{ .Env.VERSION }}
+    goos:
+      - linux
+      - darwin
+
+brews:
+  - name: git-secret-scanner
+    homepage: https://github.com/padok-team/git-secret-scanner
+    repository:
+      owner: padok-team
+      name: homebrew-tap
+      token: '{{ .Env.HOMEBREW_PAT }}'
+  - name: '{{ .Env.RELEASE_NAME }}'
+    homepage: https://github.com/padok-team/git-secret-scanner
+    repository:
+      owner: padok-team
+      name: homebrew-tap
+      token: '{{ .Env.HOMEBREW_PAT }}'

@@ -1,54 +1,68 @@
 name: Release
 
 on:
-  release:
-    types:
-      - published
+  push:
+    tags:
+      - 'v*'
+
+env:
+  GO_VERSION: 1.23
 
 jobs:
-  build:
-    runs-on: ubuntu-latest
-
-    steps:
-      - name: 🔍 Checkout repository
-        uses: actions/checkout@v4
-
-      - name: 📦 Set up Python
-        uses: actions/setup-python@v4
-        with:
-          python-version: 3.11.4
-
-      - name: 📦 Install build dependencies
-        run: pip install hatch
-      
-      - name: 🚀 Update package version
-        run: hatch version "${{ github.event.release.tag_name }}"
-
-      - name: ⚙️ Build binary wheel and source tarball
-        run: hatch build
-
-      - name: 📤 Upload build artifact
-        uses: actions/upload-artifact@v3
-        with:
-          name: dist
-          path: dist
-          if-no-files-found: error
-          retention-days: 1
-
-  publish:
-    needs: build
+  release:
+    name: Release
 
     runs-on: ubuntu-latest
-    
+
     permissions:
-      id-token: write
-    
-    steps:
-      - name: 📥 Download build artifact
-        uses: actions/download-artifact@v3
-        with:
-          name: dist
-          path: dist
+      contents: write
 
-      - name: 🚀 Publish package to PyPI
-        uses: pypa/gh-action-pypi-publish@release/v1
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          fetch-tags: true
+
+      - name: Setup Golang
+        uses: actions/setup-go@v5
+        with:
+          go-version: "${{ env.GO_VERSION }}"
+
+      - name: Get ldflags env values
+        run: |
+          echo "VERSION=${{ github.ref_name }}" >> $GITHUB_ENV
+          echo "RELEASE_NAME=git-secret-scanner@${{ github.ref_name }}" >> $GITHUB_ENV
+
+      - name: Run GoReleaser
+        uses: goreleaser/goreleaser-action@v6
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          HOMEBREW_PAT: ${{ secrets.HOMEBREW_PAT }}
+        with:
+          version: "~> 2"
+          args: release --clean
+
+  version:
+    name: Version
+
+    runs-on: ubuntu-latest
+
+    permissions:
+      contents: write
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          ref: main
+          fetch-depth: 0
+
+      - name: Bump VERSION file
+        run: echo "${{ github.ref_name }}" > VERSION
+
+      - name: Commit version
+        uses: stefanzweifel/git-auto-commit-action@v5
+        with:
+          commit_message: "chore(release): bump version to ${{ github.ref_name }}"
+          push_options: --force
