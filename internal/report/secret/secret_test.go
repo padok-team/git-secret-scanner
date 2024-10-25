@@ -13,6 +13,7 @@ var test1 Secret = Secret{
 	Commit:      "e2acefa38de1bb02673cd2496a4663a3c6c42508",
 	Line:        10,
 	Valid:       SecretValidityInvalid,
+	Scanners:    SecretScannersGitleaks,
 	Cleartext:   "test1_cleartext",
 	Fingerprint: "test1_repo:e2acefa38de1bb02673cd2496a4663a3c6c42508:test1_path:10",
 }
@@ -24,6 +25,7 @@ var test2 Secret = Secret{
 	Commit:      "e2acefa38de1bb02673cd2496a4663a3c6c42599",
 	Line:        42,
 	Valid:       SecretValidityUnknown,
+	Scanners:    SecretScannersAll,
 	Cleartext:   "",
 	Fingerprint: "hardcoded_fingerprint",
 }
@@ -35,26 +37,56 @@ var test3 Secret = Secret{
 	Commit:      "e2acefa38de1bb02673cd2496a4663a3c6c42508",
 	Line:        10,
 	Valid:       SecretValidityUnknown,
+	Scanners:    SecretScannersTrufflehog,
 	Cleartext:   "test1_cleartext",
 	Fingerprint: "test1_repo:e2acefa38de1bb02673cd2496a4663a3c6c42508:test1_path:10",
 }
 
 func TestNewSecret(t *testing.T) {
-	test, err := NewSecret("test1_repo", "test1_path", SecretKindGeneric, "e2acefa38de1bb02673cd2496a4663a3c6c42508", 10, SecretValidityInvalid, "test1_cleartext", "")
+	test, err := NewSecret(
+		"test1_repo",
+		"test1_path",
+		SecretKindGeneric,
+		"e2acefa38de1bb02673cd2496a4663a3c6c42508",
+		10,
+		SecretValidityInvalid,
+		SecretScannersGitleaks,
+		"test1_cleartext",
+		"",
+	)
 	want := &test1
 
 	if !reflect.DeepEqual(test, want) || err != nil {
 		t.Fatalf(`NewSecret(...test1) = %v, %v, want %v, nil`, test, err, want)
 	}
 
-	test, err = NewSecret("test2_repo", "test2_path", SecretKindGeneric, "e2acefa38de1bb02673cd2496a4663a3c6c42599", 42, SecretValidityUnknown, "", "hardcoded_fingerprint")
+	test, err = NewSecret(
+		"test2_repo",
+		"test2_path",
+		SecretKindGeneric,
+		"e2acefa38de1bb02673cd2496a4663a3c6c42599",
+		42,
+		SecretValidityUnknown,
+		SecretScannersAll,
+		"",
+		"hardcoded_fingerprint",
+	)
 	want = &test2
 
 	if !reflect.DeepEqual(test, want) || err != nil {
 		t.Fatalf(`NewSecret(...test2) = %v, %v, want %v, nil`, test, err, want)
 	}
 
-	test, err = NewSecret("test1_repo", "test1_path", SecretKindAMQP, "e2acefa38de1bb02673cd2496a4663a3c6c42508", 10, SecretValidityUnknown, "test1_cleartext", "")
+	test, err = NewSecret("test1_repo",
+		"test1_path",
+		SecretKindAMQP,
+		"e2acefa38de1bb02673cd2496a4663a3c6c42508",
+		10,
+		SecretValidityUnknown,
+		SecretScannersTrufflehog,
+		"test1_cleartext",
+		"",
+	)
 	want = &test3
 
 	if !reflect.DeepEqual(test, want) || err != nil {
@@ -101,6 +133,7 @@ func TestSecretMerge(t *testing.T) {
 		Commit:      "e2acefa38de1bb02673cd2496a4663a3c6c42508",
 		Line:        10,
 		Valid:       SecretValidityInvalid,
+		Scanners:    SecretScannersAll,
 		Cleartext:   "test1_cleartext",
 		Fingerprint: "test1_repo:e2acefa38de1bb02673cd2496a4663a3c6c42508:test1_path:10",
 	}

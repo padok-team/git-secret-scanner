@@ -34,6 +34,7 @@ func (gi *GitleaksReportItem) ToSecret(repository string) (*secret.Secret, error
 		gi.Commit,
 		gi.StartLine,
 		secret.SecretValidityUnknown,
+		secret.SecretScannersGitleaks,
 		gi.Secret,
 		"",
 	)
