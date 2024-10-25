@@ -2,6 +2,7 @@ package trufflehog
 
 import "github.com/padok-team/git-secret-scanner/internal/report/secret"
 
+// See https://raw.githubusercontent.com/trufflesecurity/trufflehog/refs/heads/main/proto/detectors.proto
 var TrufflehogSecretKindMapping = map[string]secret.SecretKind{
 	"Abbysale":                              secret.SecretKindAbbysale,
 	"Abstract":                              secret.SecretKindAbstract,
@@ -48,6 +49,7 @@ var TrufflehogSecretKindMapping = map[string]secret.SecretKind{
 	"Apify":                                 secret.SecretKindApify,
 	"Apilayer":                              secret.SecretKindApilayer,
 	"APIMatic":                              secret.SecretKindAPIMatic,
+	"ApiMetrics":                            secret.SecretKindApiMetrics,
 	"ApiScience":                            secret.SecretKindApiScience,
 	"APITemplate":                           secret.SecretKindAPITemplate,
 	"Apollo":                                secret.SecretKindApollo,
@@ -119,6 +121,8 @@ var TrufflehogSecretKindMapping = map[string]secret.SecretKind{
 	"BoostNote":                        secret.SecretKindBoostNote,
 	"Bored":                            secret.SecretKindBored,
 	"Borgbase":                         secret.SecretKindBorgbase,
+	"Box":                              secret.SecretKindBox,
+	"BoxOauth":                         secret.SecretKindBox,
 	"BraintreePayments":                secret.SecretKindBraintreePayments,
 	"Brandfetch":                       secret.SecretKindBrandfetch,
 	"Brightlocal":                      secret.SecretKindBrightlocal,
@@ -542,6 +546,7 @@ var TrufflehogSecretKindMapping = map[string]secret.SecretKind{
 	"MeaningCloud":                     secret.SecretKindMeaningCloud,
 	"MediaStack":                       secret.SecretKindMediaStack,
 	"Meistertask":                      secret.SecretKindMeistertask,
+	"Meraki":                           secret.SecretKindMeraki,
 	"Mesibo":                           secret.SecretKindMesibo,
 	"MessageBird":                      secret.SecretKindMessageBird,
 	"Messari":                          secret.SecretKindMessari,
@@ -599,6 +604,7 @@ var TrufflehogSecretKindMapping = map[string]secret.SecretKind{
 	"NuGetApiKey":                      secret.SecretKindNuGet,
 	"Numverify":                        secret.SecretKindNumverify,
 	"Nutritionix":                      secret.SecretKindNutritionix,
+	"NVAPI":                            secret.SecretKindNVAPI,
 	"Nylas":                            secret.SecretKindNylas,
 	"Nytimes":                          secret.SecretKindNytimes,
 	"Oanda":                            secret.SecretKindOanda,
@@ -696,12 +702,14 @@ var TrufflehogSecretKindMapping = map[string]secret.SecretKind{
 	"PureStake":                        secret.SecretKindPureStake,
 	"PushBulletApiKey":                 secret.SecretKindPushBullet,
 	"PusherChannelKey":                 secret.SecretKindPusherChannel,
+	"PyPI":                             secret.SecretKindPyPI,
 	"Qase":                             secret.SecretKindQase,
 	"Qualaroo":                         secret.SecretKindQualaroo,
 	"Qubole":                           secret.SecretKindQubole,
 	"Quickbase":                        secret.SecretKindQuickbase,
 	"QuickMetrics":                     secret.SecretKindQuickMetrics,
 	"RabbitMQ":                         secret.SecretKindRabbitMQ,
+	"RailwayApp":                       secret.SecretKindRailway,
 	"Ramp":                             secret.SecretKindRamp,
 	"RapidApi":                         secret.SecretKindRapidApi,
 	"Raven":                            secret.SecretKindRaven,
@@ -739,6 +747,7 @@ var TrufflehogSecretKindMapping = map[string]secret.SecretKind{
 	"Rownd":                            secret.SecretKindRownd,
 	"RubyGems":                         secret.SecretKindRubyGems,
 	"RunRunIt":                         secret.SecretKindRunRunIt,
+	"SaladCloudApiKey":                 secret.SecretKindSaladCloudApiKey,
 	"Salesblink":                       secret.SecretKindSalesblink,
 	"Salescookie":                      secret.SecretKindSalescookie,
 	"Salesflare":                       secret.SecretKindSalesflare,

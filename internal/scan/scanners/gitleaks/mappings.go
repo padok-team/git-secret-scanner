@@ -2,7 +2,9 @@ package gitleaks
 
 import "github.com/padok-team/git-secret-scanner/internal/report/secret"
 
+// See https://raw.githubusercontent.com/gitleaks/gitleaks/refs/heads/master/config/gitleaks.toml
 var GitleaksSecretKindMapping = map[string]secret.SecretKind{
+	"1password-service-account-token":    secret.SecretKind1Password,
 	"adafruit-api-key":                   secret.SecretKindAdafruitIO,
 	"adobe-client-id":                    secret.SecretKindAdobeIO,
 	"adobe-client-secret":                secret.SecretKindAdobeIO,
@@ -16,6 +18,7 @@ var GitleaksSecretKindMapping = map[string]secret.SecretKind{
 	"atlassian-api-token":                secret.SecretKindAtlassian,
 	"authress-service-client-access-key": secret.SecretKindAuthress,
 	"aws-access-token":                   secret.SecretKindAWS,
+	"azure-ad-client-secret":             secret.SecretKindAzure,
 	"beamer-api-token":                   secret.SecretKindBeamer,
 	"bitbucket-client-id":                secret.SecretKindBitBucket,
 	"bitbucket-client-secret":            secret.SecretKindBitBucket,
@@ -26,6 +29,7 @@ var GitleaksSecretKindMapping = map[string]secret.SecretKind{
 	"cloudflare-global-api-key":          secret.SecretKindCloudflare,
 	"cloudflare-origin-ca-key":           secret.SecretKindCloudflare,
 	"codecov-access-token":               secret.SecretKindCodecov,
+	"cohere-api-token":                   secret.SecretKindCohere,
 	"coinbase-access-token":              secret.SecretKindCoinbase,
 	"confluent-access-token":             secret.SecretKindConfluent,
 	"confluent-secret-key":               secret.SecretKindConfluent,
@@ -60,6 +64,7 @@ var GitleaksSecretKindMapping = map[string]secret.SecretKind{
 	"flutterwave-encryption-key":         secret.SecretKindFlutterwave,
 	"flutterwave-public-key":             secret.SecretKindFlutterwave,
 	"flutterwave-secret-key":             secret.SecretKindFlutterwave,
+	"flyio-access-token":                 secret.SecretKindFlyIO,
 	"frameio-api-token":                  secret.SecretKindFrameIO,
 	"freshbooks-access-token":            secret.SecretKindFreshbooks,
 	"gcp-api-key":                        secret.SecretKindGCP,
@@ -77,6 +82,7 @@ var GitleaksSecretKindMapping = map[string]secret.SecretKind{
 	"grafana-api-key":                    secret.SecretKindGrafana,
 	"grafana-cloud-api-token":            secret.SecretKindGrafana,
 	"grafana-service-account-token":      secret.SecretKindGrafana,
+	"harness-api-key":                    secret.SecretKindHarness,
 	"hashicorp-tf-api-token":             secret.SecretKindTerraformCloud,
 	"heroku-api-key":                     secret.SecretKindHeroku,
 	"hubspot-api-key":                    secret.SecretKindHubSpot,
@@ -87,8 +93,8 @@ var GitleaksSecretKindMapping = map[string]secret.SecretKind{
 	"intra42-client-secret":              secret.SecretKindIntra42,
 	"jfrog-api-key":                      secret.SecretKindJFrog,
 	"jfrog-identity-token":               secret.SecretKindJFrog,
-	"jwt":                                secret.SecretKindJWT,
 	"jwt-base64":                         secret.SecretKindJWT,
+	"jwt":                                secret.SecretKindJWT,
 	"kraken-access-token":                secret.SecretKindKraken,
 	"kucoin-access-token":                secret.SecretKindKuCoin,
 	"kucoin-secret-key":                  secret.SecretKindKuCoin,
@@ -114,6 +120,7 @@ var GitleaksSecretKindMapping = map[string]secret.SecretKind{
 	"new-relic-user-api-id":              secret.SecretKindNewRelic,
 	"new-relic-user-api-key":             secret.SecretKindNewRelic,
 	"npm-access-token":                   secret.SecretKindNpm,
+	"nuget-config-password":              secret.SecretKindNuGet,
 	"nytimes-access-token":               secret.SecretKindNytimes,
 	"okta-access-token":                  secret.SecretKindOkta,
 	"openai-api-key":                     secret.SecretKindOpenAI,
@@ -127,6 +134,7 @@ var GitleaksSecretKindMapping = map[string]secret.SecretKind{
 	"postman-api-token":                  secret.SecretKindPostman,
 	"prefect-api-token":                  secret.SecretKindPrefect,
 	"private-key":                        secret.SecretKindPrivateKey,
+	"privateai-api-token":                secret.SecretKindPrivateAI,
 	"pulumi-api-token":                   secret.SecretKindPulumi,
 	"pypi-upload-token":                  secret.SecretKindPyPI,
 	"rapidapi-access-token":              secret.SecretKindRapidApi,
@@ -176,4 +184,10 @@ var GitleaksSecretKindMapping = map[string]secret.SecretKind{
 	"yandex-api-key":                     secret.SecretKindYandex,
 	"yandex-aws-access-token":            secret.SecretKindYandex,
 	"zendesk-secret-key":                 secret.SecretKindZendesk,
+
+	// ignore generic secrets found by some custom gitleaks detectors
+	"curl-auth-header":       secret.SecretKindGeneric,
+	"curl-auth-user":         secret.SecretKindGeneric,
+	"hashicorp-tf-password":  secret.SecretKindGeneric,
+	"kubernetes-secret-yaml": secret.SecretKindGeneric,
 }
