@@ -36,6 +36,12 @@ func (ri *TrufflehogReportItem) UnmarshalJSON(b []byte) error {
 		file = v.(string)
 	}
 
+	var line int
+	v, ok = gitInfo["line"]
+	if ok {
+		line = int(v.(float64))
+	}
+
 	var verified secret.SecretValidity
 	if detectorName != string(secret.SecretKindPrivateKey) {
 		if data["Verified"].(bool) {
@@ -48,7 +54,7 @@ func (ri *TrufflehogReportItem) UnmarshalJSON(b []byte) error {
 	*ri = TrufflehogReportItem{
 		Commit:       gitInfo["commit"].(string),
 		File:         file,
-		Line:         int(gitInfo["line"].(float64)),
+		Line:         line,
 		DetectorName: detectorName,
 		Verified:     verified,
 		Raw:          data["Raw"].(string),

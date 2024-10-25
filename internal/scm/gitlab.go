@@ -60,10 +60,7 @@ func (gl GitlabScm) ListRepos(ctx context.Context) ([]string, error) {
 			return nil, err
 		}
 		for _, repo := range glRepos {
-			// skip empty repositories
-			if repo.Statistics.RepositorySize != 0 {
-				repos = append(repos, repo.PathWithNamespace)
-			}
+			repos = append(repos, repo.PathWithNamespace)
 		}
 		if resp.NextPage == 0 {
 			break

@@ -2,9 +2,11 @@ package scan
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"path"
 
+	"github.com/go-git/go-git/v5/plumbing/transport"
 	"github.com/padok-team/git-secret-scanner/internal/progress"
 	"github.com/padok-team/git-secret-scanner/internal/report"
 	"github.com/padok-team/git-secret-scanner/internal/scan/scanners/gitleaks"
@@ -49,6 +51,10 @@ func repoScanTask(ctx context.Context, repository string, s scm.Scm, full bool, 
 
 	err := git.Clone(ctx, url, destination, !full, true)
 	if err != nil {
+		// if remote is empty, scan next repository
+		if errors.Is(err, transport.ErrEmptyRemoteRepository) {
+			return nil
+		}
 		return fmt.Errorf("failed to clone repository %q: %w", repository, err)
 	}
 
