@@ -32,7 +32,7 @@ func LoadIgnoredFingerprints(path string) error {
 		}
 		defer f.Close()
 
-		r, err := regexp.Compile("([a-zA-Z0-9-_/]+:){3}[0-9]+")
+		r, err := regexp.Compile(`^(.+:){3}[0-9]+$`)
 		if err != nil {
 			return err
 		}
