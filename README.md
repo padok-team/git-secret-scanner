@@ -5,7 +5,7 @@ This tool aims to find secrets and credentials in git repositories owned by Orga
 > **Warning**
 > 
 > This tool is only designed for Linux and MacOS.
-> The current version only supports GitLab and GitHub.
+> The current version only supports Gitlab and GitHub.
 
 ## Why this tool?
 
@@ -20,98 +20,111 @@ We designed this tool to combine the strenghts of both previous tools in order t
 ## Requirements
 
 `git-secret-scanner` requires the following tools to work:
-- [Python 3](https://www.python.org/downloads/) (>= 3.11)
-- [pip](https://pip.pypa.io/en/stable/installation/)
 - [git](https://git-scm.com/book/fr/v2/D%C3%A9marrage-rapide-Installation-de-Git)
-- [TruffleHog](https://github.com/trufflesecurity/trufflehog) (>= 3.0)
-- [Gitleaks](https://github.com/gitleaks/gitleaks) (>= 8.0)
+- [TruffleHog](https://github.com/trufflesecurity/trufflehog) (>= 3.82.13)
+- [Gitleaks](https://github.com/gitleaks/gitleaks) (>= 8.21.1)
 
 You can easily check that all requirements are met with the commands below:
 
-```bash
-$ python --version
-$ pip --version
-$ git --version
-$ trufflehog --version
-$ gitleaks version
+```shell
+git --version
+trufflehog --version
+gitleaks version
 ```
 
 ## Installation
 
-### Using `pip`
+### Using `homebrew`
 
-The simplest way to install `git-secret-scanner` is with `pip`.
+The simplest way to install `git-secret-scanner` is with `homebrew`.
 
-```bash
-$ pip install git-secret-scanner
+```shell
+brew tap padok-team/tap
+brew install git-secret-scanner
 ```
 
-Then export your personal access token for ([GitHub](https://docs.github.com/en/enterprise-server@3.4/authentication/keeping-your-account-and-data-secure/creating-a-personal-access-token) or [GitLab](https://docs.gitlab.com/ee/user/profile/personal_access_tokens.html)):
+### With binary
 
-```bash
-# GitHub
-$ export GITHUB_TOKEN="<token>"
-# GitLab
-$ export GITLAB_TOKEN="<token>"
-```
+Download the binary for your platform and OS on the [realeases page](https://github.com/zricethezav/gitleaks/releases).
 
 ### From source
 
 1. Clone the repository
 
-```bash
-$ git clone https://github.com/padok-team/git-secret-scanner.git # using https
-# or
-$ git clone git@github.com:padok-team/git-secret-scanner.git # using ssh
-$ cd git-secret-scanner
+```shell
+git clone https://github.com/padok-team/git-secret-scanner.git
+cd git-secret-scanner
 ```
 
-2. Install the Python requirements to run the tool
+2. Build the binary
 
-```bash
-$ pip install -r requirements.txt
+```shell
+make build
 ```
-
-3. Add your personal access token ([GitHub](https://docs.github.com/en/enterprise-server@3.4/authentication/keeping-your-account-and-data-secure/creating-a-personal-access-token) / [GitLab](https://docs.gitlab.com/ee/user/profile/personal_access_tokens.html)) for your git SaaS in your environment variables:
-
-```bash
-# GitHub
-$ export GITHUB_TOKEN="<token>"
-# GitLab
-$ export GITLAB_TOKEN="<token>"
-```
-
-> GitHub tokens require the `repo` scope, GitLab tokens require both `read_api` and `read_repository` scopes.
 
 ## Usage
 
 To get detailed usage information about how to use this tool, run 
 
-```bash
-$ git-secret-scanner --help
+```shell
+git-secret-scanner --help
 ```
 
-### Examples
+### Simple
 
-#### GitHub
+Add a personal access token ([GitHub](https://docs.github.com/en/enterprise-server@3.4/authentication/keeping-your-account-and-data-secure/creating-a-personal-access-token) / [Gitlab](https://docs.gitlab.com/ee/user/profile/personal_access_tokens.html)) for your git SaaS in your environment variables.
 
-Scan the repositories of the organization *my-org* and write the output in the file *output.csv*: 
-
-```bash
-$ git-secret-scanner github -o <my-org>
+```shell
+# GitHub
+export GITHUB_TOKEN="<token>"
+# Gitlab
+export GITLAB_TOKEN="<token>"
 ```
 
-#### GitLab
+> GitHub tokens require the `repo` scope, Gitlab tokens require both `read_api` and `read_repository` scopes.
 
-Scan the repositories of the group *my-group* and write the output in the file *output.csv*: 
+```shell
+# With GITHUB_TOKEN set
+git-secret-scanner github -o "<org>"
+# With GITLAB_TOKEN set
+git-secret-scanner gitlab -g "<group>"
+```
 
-```bash
-$ git-secret-scanner gitlab -o <my-org>
+### Ignore secrets
+
+You can instruct `git-secret-scanner` to ignore some specific secrets in its results. This is useful to ignore false positives or to ignore secrets that have already been dealt with.
+
+#### Ignore secrets with comments
+
+`git-secret-scanner` understands Gitleaks and Trufflehog annotations to ignore secrets (`gitleaks:allow` and `trufflehog:ignore`). You can add a comment with one of these annotations on the line that has the secret to have `git-secret-scanner` ignore it.
+
+#### Ignore secrets with fingerprints
+
+To ignore specific fingerprints, create a file with a list of all secret fingerprints to ignore during the scan. A fingerprint is computed in the following way:
+
+```
+<repo_name>:<commit_sha>:<file>:<line>
+```
+
+Then run `git-secret-scanner` with the `-i` flag:
+
+```shell
+git-secret-scanner github -o "<org>" -i "<path_to_fingerprints_ignore_file>"
+git-secret-scanner gitlab -g "<group>" -i "<path_to_fingerprints_ignore_file>"
+```
+
+### Baseline
+
+`git-secret-scanner` supports using a previous report as a baseline for a scan. All previous secrets found in the baseline are ignored in the final report. This is useful to detect added secrets between two scans.
+
+```shell
+git-secret-scanner github -o "<org>" -b "<path_to_previous_report_csv>"
+git-secret-scanner gitlab -g "<group>" -b "<path_to_previous_report_csv>"
 ```
 
 ## Questions?
 
-Open an issue to contact us or to give us suggestions. We are open to collaboration!
+Open an issue to contact us or to give us suggestions. We are open to collaboration.
 
 ## License
 

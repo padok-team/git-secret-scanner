@@ -1,4 +1,4 @@
-name: Type checking and linting
+name: CI
 
 on:
   push:
@@ -8,26 +8,94 @@ on:
     branches:
       - main
 
+env:
+  GO_VERSION: 1.23
+
 jobs:
-  lint:
+  conventional-commits-check:
+    name: Check conventional commits
+
+    runs-on: ubuntu-latest
+
+    if: ${{ github.event_name == 'pull_request' }}
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Setup NodeJS
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Setup @commitlint
+        run: |
+          npm install --global @commitlint/cli @commitlint/config-conventional
+          echo 'module.exports = {extends: ["@commitlint/config-conventional"]}' > commitlint.config.js
+
+      - name: Run @commitlint
+        run: |
+          npx commitlint \
+            --from ${{ github.event.pull_request.base.sha }} \
+            --to ${{ github.event.pull_request.head.sha }} \
+            --verbose
+
+  unit-tests:
+    name: Unit tests
+
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout repository
+      - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Set up Python
-        uses: actions/setup-python@v4
+      - name: Setup Golang
+        uses: actions/setup-go@v5
         with:
-          python-version: 3.11.4
+          go-version: "${{ env.GO_VERSION }}"
 
-      - name: Install dependencies
+      - name: Run tests
+        run: make test
+
+  lint:
+    name: Lint
+
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Golang
+        uses: actions/setup-go@v5
+        with:
+          go-version: "${{ env.GO_VERSION }}"
+          cache: false
+
+      - name: Run gloangci-lint
+        uses: golangci/golangci-lint-action@v6
+        with:
+          args: --timeout=5m
+
+  build:
+    name: Build
+
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Golang
+        uses: actions/setup-go@v5
+        with:
+          go-version: "${{ env.GO_VERSION }}"
+
+      - name: Get ldflags env values
         run: |
-          pip install hatch
-          pip install -r requirements.txt
+          echo "VERSION=ci-$( echo ${{ github.head_ref || github.ref_name }} | tr '/' '-' )" >> $GITHUB_ENV
 
-      - name: Type checking
-        run: hatch run typecheck
-
-      - name: Linting
-        run: hatch run lint
+      - name: Build binary
+        run: make build

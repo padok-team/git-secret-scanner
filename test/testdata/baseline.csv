@@ -1,0 +1,4 @@
+repository,path,kind,commit,line,valid,scanners,cleartext,fingerprint
+test1_repo,test1_path,Generic,e2acefa38de1bb02673cd2496a4663a3c6c42508,10,false,gitleaks,test1_cleartext,test1_repo:e2acefa38de1bb02673cd2496a4663a3c6c42508:test1_path:10
+test2_repo,test2_path,Generic,e2acefa38de1bb02673cd2496a4663a3c6c42599,42,,all,,hardcoded_fingerprint
+test1_repo,test1_path,AMQP,e2acefa38de1bb02673cd2496a4663a3c6c42508,5,,trufflehog,test1_cleartext,test1_repo:e2acefa38de1bb02673cd2496a4663a3c6c42508:test1_path:5
