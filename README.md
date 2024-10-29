@@ -40,7 +40,7 @@ The simplest way to install `git-secret-scanner` is with `homebrew`.
 
 ```shell
 brew tap padok-team/tap
-brew install guacamole
+brew install git-secret-scanner
 ```
 
 ### With binary
