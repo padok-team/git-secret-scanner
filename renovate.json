@@ -5,12 +5,16 @@
   ],
   "packageRules": [
     {
-      "matchPackagePatterns": ["gomod"],
-      "groupName": "go"
+      "groupName": "go",
+      "matchPackageNames": [
+        "/gomod/"
+      ]
     },
     {
-      "matchPackagePatterns": ["github"],
-      "groupName": "github"
+      "groupName": "github",
+      "matchPackageNames": [
+        "/github/"
+      ]
     }
   ]
 }
