@@ -42,27 +42,3 @@ jobs:
         with:
           version: "~> 2"
           args: release --clean
-
-  version:
-    name: Version
-
-    runs-on: ubuntu-latest
-
-    permissions:
-      contents: write
-
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-        with:
-          ref: main
-          fetch-depth: 0
-
-      - name: Bump VERSION file
-        run: echo "${{ github.ref_name }}" > VERSION
-
-      - name: Commit version
-        uses: stefanzweifel/git-auto-commit-action@v5
-        with:
-          commit_message: "chore(release): bump version to ${{ github.ref_name }}"
-          push_options: --force
