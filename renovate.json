@@ -11,6 +11,12 @@
       ]
     },
     {
+      "groupName": "docker",
+      "matchPackageNames": [
+        "/docker/"
+      ]
+    },
+    {
       "groupName": "github",
       "matchPackageNames": [
         "/github/"
