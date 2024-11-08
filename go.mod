@@ -5,7 +5,6 @@ go 1.23.0
 require (
 	github.com/go-git/go-git/v5 v5.12.0
 	github.com/gocarina/gocsv v0.0.0-20240520201108-78e41c74b4b1
-	github.com/google/go-github/v65 v65.0.0
 	github.com/google/go-github/v66 v66.0.0
 	github.com/rs/zerolog v1.33.0
 	github.com/spf13/cobra v1.8.1
