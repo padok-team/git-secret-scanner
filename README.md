@@ -43,6 +43,14 @@ brew tap padok-team/tap
 brew install git-secret-scanner
 ```
 
+### With Docker
+
+`git-secret-scanner` is prepackaged in a Docker image with all required dependencies.
+
+```shell
+docker run --rm -it -v "$(pwd):/home/git-secret-scanner" ghcr.io/padok-team/git-secret-scanner github -o "<org>"
+```
+
 ### With binary
 
 Download the binary for your platform and OS on the [realeases page](https://github.com/zricethezav/gitleaks/releases).
@@ -70,7 +78,7 @@ To get detailed usage information about how to use this tool, run
 git-secret-scanner --help
 ```
 
-### Simple
+### Basics
 
 Add a personal access token ([GitHub](https://docs.github.com/en/enterprise-server@3.4/authentication/keeping-your-account-and-data-secure/creating-a-personal-access-token) / [Gitlab](https://docs.gitlab.com/ee/user/profile/personal_access_tokens.html)) for your git SaaS in your environment variables.
 
