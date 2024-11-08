@@ -44,4 +44,6 @@ jobs:
           args: release --clean
   
   build-and-push:
+    name: Build and Push
+
     uses: ./.github/workflows/build-and-push.yaml

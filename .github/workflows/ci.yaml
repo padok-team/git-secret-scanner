@@ -80,4 +80,6 @@ jobs:
           args: --timeout=5m
 
   build:
+    name: Build
+
     uses: ./.github/workflows/build-and-push.yaml
