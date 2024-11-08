@@ -42,3 +42,6 @@ jobs:
         with:
           version: "~> 2"
           args: release --clean
+  
+  build-and-push:
+    uses: ./.github/workflows/build-and-push.yaml
