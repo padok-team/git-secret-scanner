@@ -30,9 +30,9 @@ COPY main.go main.go
 # by leaving it empty we can ensure that the container and binary shipped on it will have the same platform.
 RUN CGO_ENABLED=0 GOOS=${TARGETOS:-linux} GOARCH=${TARGETARCH} go build -a \
     -ldflags="\
-    -X ${PACKAGE}/internal/version.Version=${VERSION} \
-    -X ${PACKAGE}/internal/version.CommitHash=${COMMIT_HASH} \
-    -X ${PACKAGE}/internal/version.BuildTimestamp=${BUILD_TIMESTAMP}" \
+    -X ${PACKAGE}/cmd.Version=${VERSION} \
+    -X ${PACKAGE}/cmd.CommitHash=${COMMIT_HASH} \
+    -X ${PACKAGE}/cmd.BuildTimestamp=${BUILD_TIMESTAMP}" \
     -o bin/git-secret-scanner main.go
 
 # ---
