@@ -75,8 +75,8 @@ RUN adduser \
     $USER
 
 # Copy the scanners to the production image from the scanners stage
-COPY --from=gitleaks --chmod=511 /usr/bin/gitleaks /usr/local/bin/gitleaks
-COPY --from=trufflehog --chmod=511 /usr/bin/trufflehog /usr/local/bin/trufflehog
+COPY --from=gitleaks --chmod=555 /usr/bin/gitleaks /usr/local/bin/gitleaks
+COPY --from=trufflehog --chmod=555 /usr/bin/trufflehog /usr/local/bin/trufflehog
 
 # Copy the binary to the production image from the builder stage
 COPY --from=builder --chmod=511 /workspace/bin/git-secret-scanner /usr/local/bin/git-secret-scanner
