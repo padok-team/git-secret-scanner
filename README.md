@@ -48,7 +48,17 @@ brew install git-secret-scanner
 `git-secret-scanner` is prepackaged in a Docker image with all required dependencies.
 
 ```shell
-docker run --rm -it -v "$(pwd):/home/git-secret-scanner" ghcr.io/padok-team/git-secret-scanner github -o "<org>"
+# Run GitHub scan
+docker run --rm -it \
+    -e GITHUB_TOKEN=$GITHUB_TOKEN \
+    -v "$(pwd):/home/git-secret-scanner" \
+    ghcr.io/padok-team/git-secret-scanner github -o "<org>"
+
+# Run Gitlab scan
+docker run --rm -it \
+    -e GITLAB_TOKEN=$GITLAB_TOKEN \
+    -v "$(pwd):/home/git-secret-scanner" \
+    ghcr.io/padok-team/git-secret-scanner gitlab -g "<group>"
 ```
 
 ### With binary
