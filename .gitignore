@@ -23,6 +23,7 @@ bin
 
 # VSCode config files
 .vscode
+.cache
 
 # Report files
 report.csv
