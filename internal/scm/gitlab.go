@@ -5,7 +5,7 @@ import (
 
 	"github.com/padok-team/git-secret-scanner/internal/scm/git"
 	"github.com/rs/zerolog/log"
-	"github.com/xanzy/go-gitlab"
+	gitlab "gitlab.com/gitlab-org/api/client-go"
 )
 
 type GitlabScm struct {
