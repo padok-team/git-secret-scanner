@@ -5,7 +5,7 @@ import (
 	"fmt"
 
 	"github.com/padok-team/git-secret-scanner/internal/scm/git"
-	"github.com/xanzy/go-gitlab"
+	gitlab "gitlab.com/gitlab-org/api/client-go"
 )
 
 type Visibility int
