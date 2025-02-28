@@ -1,5 +1,5 @@
 # Build git-secret-scanner binary
-FROM docker.io/library/golang:1.23.3@sha256:d56c3e08fe5b27729ee3834854ae8f7015af48fd651cd25d1e3bcf3c19830174 AS builder
+FROM docker.io/library/golang:1.24.0@sha256:3f7444391c51a11a039bf0359ee81cc64e663c17d787ad0e637a4de1a3f62a71 AS builder
 
 ARG TARGETOS
 ARG TARGETARCH
@@ -43,12 +43,12 @@ FROM ghcr.io/gitleaks/gitleaks:v8.21.2@sha256:0e99e8821643ea5b235718642b93bb3248
 # ---
 
 # Retrieve trufflehog binary
-FROM docker.io/trufflesecurity/trufflehog:v3.82.13@sha256:9abf17c8902d58c05d82f910cf5dec05d100912482e8002d88918511fb44b6f6 AS trufflehog
+FROM docker.io/trufflesecurity/trufflehog:3.88.14@sha256:e4185b9aa8d1b0cb8789b40b78765f5f40a4d3ccb4b144c09d992f8ebd8fd5e2 AS trufflehog
 
 # ---
 
 # Build the final image
-FROM docker.io/library/alpine:3.20.3@sha256:beefdbd8a1da6d2915566fde36db9db0b524eb737fc57cd1367effd16dc0d06d
+FROM docker.io/library/alpine:3.21.3@sha256:a8560b36e8b8210634f77d9f7f9efd7ffa463e380b75e2e74aff4511df3ef88c
 
 WORKDIR /home/git-secret-scanner
 
