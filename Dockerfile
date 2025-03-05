@@ -1,5 +1,5 @@
 # Build git-secret-scanner binary
-FROM docker.io/library/golang:1.23.3@sha256:d56c3e08fe5b27729ee3834854ae8f7015af48fd651cd25d1e3bcf3c19830174 AS builder
+FROM docker.io/library/golang:1.23.7@sha256:1acb493b9f9dfdfe705042ce09e8ded908ce4fb342405ecf3ca61ce7f3b168c7 AS builder
 
 ARG TARGETOS
 ARG TARGETARCH
@@ -48,7 +48,7 @@ FROM docker.io/trufflesecurity/trufflehog:v3.82.13@sha256:9abf17c8902d58c05d82f9
 # ---
 
 # Build the final image
-FROM docker.io/library/alpine:3.20.3@sha256:beefdbd8a1da6d2915566fde36db9db0b524eb737fc57cd1367effd16dc0d06d
+FROM docker.io/library/alpine:3.20.6@sha256:de4fe7064d8f98419ea6b49190df1abbf43450c1702eeb864fe9ced453c1cc5f
 
 WORKDIR /home/git-secret-scanner
 
