@@ -38,7 +38,7 @@ RUN CGO_ENABLED=0 GOOS=${TARGETOS:-linux} GOARCH=${TARGETARCH} go build -a \
 # ---
 
 # Retrieve gitleaks binary
-FROM ghcr.io/gitleaks/gitleaks:v8.21.2@sha256:0e99e8821643ea5b235718642b93bb32486af9c8162c8b8731f7cbdc951a7f46 AS gitleaks
+FROM ghcr.io/gitleaks/gitleaks:v8.21.4@sha256:9395cf50b5a1fc1fbf08b2d7bde5b2c537448a951549aa22ec91c90ff63c0984 AS gitleaks
 
 # ---
 
