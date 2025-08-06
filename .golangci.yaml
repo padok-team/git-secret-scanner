@@ -1,0 +1,9 @@
+version: "2"
+
+run:
+  timeout: 5m
+
+linters:
+  exclusions:
+    presets:
+      - std-error-handling
