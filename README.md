@@ -21,8 +21,8 @@ We designed this tool to combine the strenghts of both previous tools in order t
 
 `git-secret-scanner` requires the following tools to work:
 - [git](https://git-scm.com/book/fr/v2/D%C3%A9marrage-rapide-Installation-de-Git)
-- [TruffleHog](https://github.com/trufflesecurity/trufflehog) (>= 3.82.13)
-- [Gitleaks](https://github.com/gitleaks/gitleaks) (>= 8.21.1)
+- [TruffleHog](https://github.com/trufflesecurity/trufflehog) (>= 3.90.3)
+- [Gitleaks](https://github.com/gitleaks/gitleaks) (>= 8.28.0)
 
 You can easily check that all requirements are met with the commands below:
 

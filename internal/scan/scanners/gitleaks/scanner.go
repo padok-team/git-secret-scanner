@@ -44,7 +44,7 @@ func GitleaksScan(ctx context.Context, repository string, directory string, full
 	reportPath := path.Join(directory, "gitleaks.json")
 
 	args := []string{
-		"detect",
+		"git",
 		"--source=" + directory,
 		"--report-path=" + reportPath,
 		"--report-format=json",
