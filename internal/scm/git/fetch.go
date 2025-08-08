@@ -9,6 +9,8 @@ import (
 	"github.com/go-git/go-git/v5/config"
 )
 
+const FullFetchRefSpec = "+refs/*:refs/remotes/%s/*"
+
 func Fetch(repo string, shallow bool) error {
 	r, err := git.PlainOpen(repo)
 	if err != nil {
@@ -22,7 +24,7 @@ func Fetch(repo string, shallow bool) error {
 		opts.Depth = 1
 	} else {
 		opts.RefSpecs = []config.RefSpec{
-			config.RefSpec(fmt.Sprintf(config.DefaultFetchRefSpec, "origin")),
+			config.RefSpec(fmt.Sprintf(FullFetchRefSpec, "origin")),
 		}
 		opts.Tags = git.AllTags
 		opts.Depth = math.MaxInt32 // means infinite depth, cf. https://git-scm.com/docs/shallow
