@@ -30,6 +30,11 @@ func Clone(ctx context.Context, url string, destination string, shallow bool, fe
 		} else {
 			return err
 		}
+	} else if !shallow {
+		// if it's not a shallow clone, fetch all other remote refs that are not retrieved by default
+		if err := Fetch(destination, false); err != nil {
+			return fmt.Errorf("fetch error: %w", err)
+		}
 	}
 
 	return nil
