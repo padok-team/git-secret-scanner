@@ -18,6 +18,7 @@ func TestNewJSONReportWriter(t *testing.T) {
 	if err != nil {
 		t.Fatalf(`NewJSONReportWriter("test/report.json") = _, %v, want _, nil`, err)
 	}
+	defer writer.Close()
 
 	writer.file.WriteString("line1\n") //nolint:errcheck
 	writer.file.WriteString("line2\n") //nolint:errcheck
@@ -27,24 +28,31 @@ func TestNewJSONReportWriter(t *testing.T) {
 	if err != nil {
 		t.Fatalf(`os.Open("test/report.json") = _, %v, want _, nil`, err)
 	}
+	defer f.Close()
+	defer os.Remove(jsonReportPath)
 
 	scanner := bufio.NewScanner(f)
 
 	scanner.Scan()
-	if scanner.Text() != "line1" {
-		t.Fatalf(`scanner.Text() = %s, want %s`, err, "line1")
-	}
-	scanner.Scan()
-	if scanner.Text() != "line2" {
-		t.Fatalf(`scanner.Text() = %s, want %s`, err, "line2")
-	}
-	scanner.Scan()
-	if scanner.Text() != "line3" {
-		t.Fatalf(`scanner.Text() = %s, want %s`, err, "line3")
+	want := scanner.Text()
+
+	if want != "line1" {
+		t.Fatalf(`scanner.Text() = %s, want %s`, want, "line1")
 	}
 
-	writer.Close()
-	f.Close()
+	scanner.Scan()
+	want = scanner.Text()
+
+	if want != "line2" {
+		t.Fatalf(`scanner.Text() = %s, want %s`, want, "line2")
+	}
+
+	scanner.Scan()
+	want = scanner.Text()
+
+	if want != "line3" {
+		t.Fatalf(`scanner.Text() = %s, want %s`, want, "line3")
+	}
 }
 
 func TestJSONReportWriterWriteAll(t *testing.T) {
@@ -52,6 +60,8 @@ func TestJSONReportWriterWriteAll(t *testing.T) {
 	if err != nil {
 		t.Fatalf(`NewJSONReportWriter("test/report.json") = %v, want false, nil`, err)
 	}
+	defer writer.Close()
+	defer os.Remove(jsonReportPath)
 
 	err = writer.WriteAll([]*secret.Secret{&test1, &test2, &test3})
 	if err != nil {
@@ -63,16 +73,16 @@ func TestJSONReportWriterWriteAll(t *testing.T) {
 		t.Fatalf(`os.ReadFile("test/report.json") = _, %v, want _, nil`, err)
 	}
 
-	want, err := json.Marshal([]*secret.Secret{&test1, &test2, &test3})
-	if err != nil {
-		t.Fatalf(`json.Marshal = %v, want nil`, err)
+	var s []*secret.Secret
+	if err := json.Unmarshal(b, &s); err != nil {
+		t.Fatalf(`json.Unmarshal = %v, want nil`, err)
 	}
 
-	if !reflect.DeepEqual(b, want) {
-		t.Fatalf(`b = %v, want %v`, b, want)
-	}
+	want := []*secret.Secret{&test1, &test2, &test3}
 
-	writer.Close()
+	if !reflect.DeepEqual(s, want) {
+		t.Fatalf(`s = %v, want %v`, s, want)
+	}
 }
 
 func TestReadJSONReport(t *testing.T) {
@@ -80,6 +90,8 @@ func TestReadJSONReport(t *testing.T) {
 	if err != nil {
 		t.Fatalf(`NewJSONReportWriter("test/report.json") = _, %v, want _, nil`, err)
 	}
+	defer writer.Close()
+	defer os.Remove(jsonReportPath)
 
 	slice := []*secret.Secret{&test1, &test2, &test3}
 

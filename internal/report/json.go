@@ -27,10 +27,6 @@ func NewJSONReportWriter(path string) (*JSONReportWriter, error) {
 		return nil, err
 	}
 
-	if _, err := f.WriteString("[]"); err != nil {
-		return nil, err
-	}
-
 	return &JSONReportWriter{SecretsWrittenCount: 0, file: f}, nil
 }
 
@@ -41,12 +37,8 @@ func (w *JSONReportWriter) WriteAll(s []*secret.Secret) error {
 
 			// handle separation between secrets in JSON
 			if w.SecretsWrittenCount == 0 {
-				// move back to overwrite the last "]" of the empty JSON array (e.g. "[]")
-				if _, err := w.file.Seek(-1, 1); err != nil {
-					return err
-				}
-				// handle the line break right after the opening "["
-				input = "\n  "
+				// add the opening "["
+				input = "[\n  "
 			} else {
 				// move back to overwrite the last "\n]"
 				if _, err := w.file.Seek(-2, 1); err != nil {

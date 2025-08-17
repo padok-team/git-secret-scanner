@@ -52,6 +52,7 @@ func TestNewCSVReportWriter(t *testing.T) {
 	if err != nil {
 		t.Fatalf(`NewCSVReportWriter("test/report.csv") = _, %v, want _, nil`, err)
 	}
+	defer writer.Close()
 
 	writer.file.WriteString("line1\n") //nolint:errcheck
 	writer.file.WriteString("line2\n") //nolint:errcheck
@@ -61,24 +62,31 @@ func TestNewCSVReportWriter(t *testing.T) {
 	if err != nil {
 		t.Fatalf(`os.Open("test/report.csv") = _, %v, want _, nil`, err)
 	}
+	defer f.Close()
+	defer os.Remove(csvReportPath)
 
 	scanner := bufio.NewScanner(f)
 
 	scanner.Scan()
-	if scanner.Text() != "line1" {
-		t.Fatalf(`scanner.Text() = %s, want %s`, err, "line1")
-	}
-	scanner.Scan()
-	if scanner.Text() != "line2" {
-		t.Fatalf(`scanner.Text() = %s, want %s`, err, "line2")
-	}
-	scanner.Scan()
-	if scanner.Text() != "line3" {
-		t.Fatalf(`scanner.Text() = %s, want %s`, err, "line3")
+	want := scanner.Text()
+
+	if want != "line1" {
+		t.Fatalf(`scanner.Text() = %s, want %s`, want, "line1")
 	}
 
-	writer.Close()
-	f.Close()
+	scanner.Scan()
+	want = scanner.Text()
+
+	if want != "line2" {
+		t.Fatalf(`scanner.Text() = %s, want %s`, want, "line2")
+	}
+
+	scanner.Scan()
+	want = scanner.Text()
+
+	if want != "line3" {
+		t.Fatalf(`scanner.Text() = %s, want %s`, want, "line3")
+	}
 }
 
 func TestCSVReportWriterWriteAll(t *testing.T) {
@@ -86,6 +94,7 @@ func TestCSVReportWriterWriteAll(t *testing.T) {
 	if err != nil {
 		t.Fatalf(`NewCSVReportWriter("test/report.csv") = %v, want false, nil`, err)
 	}
+	defer writer.Close()
 
 	err = writer.WriteAll([]*secret.Secret{&test1, &test2, &test3})
 	if err != nil {
@@ -96,6 +105,8 @@ func TestCSVReportWriterWriteAll(t *testing.T) {
 	if err != nil {
 		t.Fatalf(`os.Open("test/report.csv") = _, %v, want _, nil`, err)
 	}
+	defer f.Close()
+	defer os.Remove(csvReportPath)
 
 	scanner := bufio.NewScanner(f)
 
@@ -137,9 +148,6 @@ func TestCSVReportWriterWriteAll(t *testing.T) {
 	if scanner.Text() != want || err != nil {
 		t.Fatalf(`scanner.Text() = %q, %v, want %q, nil`, test, err, want)
 	}
-
-	writer.Close()
-	f.Close()
 }
 
 func TestReadCSVReport(t *testing.T) {
@@ -147,6 +155,8 @@ func TestReadCSVReport(t *testing.T) {
 	if err != nil {
 		t.Fatalf(`NewCSVReportWriter("test/report.csv") = _, %v, want _, nil`, err)
 	}
+	defer writer.Close()
+	defer os.Remove(csvReportPath)
 
 	slice := []*secret.Secret{&test1, &test2, &test3}
 
