@@ -9,7 +9,7 @@ import (
 	"github.com/go-git/go-git/v5/config"
 )
 
-const FullFetchRefSpec = "+refs/*:refs/remotes/%s/*"
+const FullFetchRefSpec string = "+refs/*:refs/remotes/%s/*"
 
 func Fetch(repo string, shallow bool) error {
 	r, err := git.PlainOpen(repo)

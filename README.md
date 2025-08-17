@@ -136,8 +136,8 @@ git-secret-scanner gitlab -g "<group>" -i "<path_to_fingerprints_ignore_file>"
 `git-secret-scanner` supports using a previous report as a baseline for a scan. All previous secrets found in the baseline are ignored in the final report. This is useful to detect added secrets between two scans.
 
 ```shell
-git-secret-scanner github -o "<org>" -b "<path_to_previous_report_csv>"
-git-secret-scanner gitlab -g "<group>" -b "<path_to_previous_report_csv>"
+git-secret-scanner github -o "<org>" -b "<path_to_previous_report>"
+git-secret-scanner gitlab -g "<group>" -b "<path_to_previous_report>"
 ```
 
 ## Questions?

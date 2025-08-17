@@ -1,6 +1,8 @@
 package scan
 
 import (
+	"fmt"
+
 	"github.com/padok-team/git-secret-scanner/internal/report"
 	"github.com/padok-team/git-secret-scanner/internal/report/secret"
 	"github.com/rs/zerolog/log"
@@ -18,15 +20,19 @@ func GetRepoBaseline(repository string) secret.SecretSet {
 
 func LoadBaseline(path string) error {
 	if path != "" {
-		report, err := report.ReadCSVReport(path)
+		r, err := report.ReadJSONReport(path)
 		if err != nil {
-			return err
+			// if we got an error, try to read the baseline as CSV instead
+			r, err = report.ReadCSVReport(path)
+			if err != nil {
+				return fmt.Errorf("failed to parse file %s", path)
+			}
 		}
 
 		b := make(map[string]secret.SecretSet)
 		num := 0
 
-		for _, s := range report {
+		for _, s := range r {
 			_, ok := b[s.Repository]
 			if !ok {
 				b[s.Repository] = secret.NewSet()

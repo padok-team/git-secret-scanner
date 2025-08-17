@@ -1,43 +1,50 @@
 package report
 
 import (
+	"fmt"
 	"os"
 
 	"github.com/gocarina/gocsv"
 	"github.com/padok-team/git-secret-scanner/internal/report/secret"
+	"github.com/padok-team/git-secret-scanner/internal/utils"
 )
 
 type CSVReportWriter struct {
+	SecretsWrittenCount int
+
 	file *os.File
 }
 
-func NewCSVReportWriter(path string, forceRecreate bool) (*CSVReportWriter, error) {
-	var err error
-	var f *os.File
+func NewCSVReportWriter(path string) (*CSVReportWriter, error) {
+	path = reportPath(path, "csv")
 
-	if forceRecreate {
-		f, err = os.Create(path)
-	} else {
-		f, err = os.OpenFile(path, os.O_RDWR|os.O_APPEND, 0755)
+	if utils.FileExistsAndNotEmpty(path) {
+		return nil, fmt.Errorf("file \"%s\" already exists", path)
 	}
+
+	f, err := os.Create(path)
 	if err != nil {
 		return nil, err
 	}
-
-	return &CSVReportWriter{file: f}, nil
+	return &CSVReportWriter{SecretsWrittenCount: 0, file: f}, nil
 }
 
 func (w *CSVReportWriter) WriteAll(s []*secret.Secret) error {
-	info, err := w.file.Stat()
-	if err != nil {
-		return err
+	if len(s) > 0 {
+		if w.SecretsWrittenCount == 0 {
+			if err := gocsv.Marshal(s, w.file); err != nil {
+				return err
+			}
+		} else {
+			if err := gocsv.MarshalWithoutHeaders(s, w.file); err != nil {
+				return err
+			}
+		}
+
+		w.SecretsWrittenCount += len(s)
 	}
 
-	if info.Size() > 0 {
-		return gocsv.MarshalWithoutHeaders(s, w.file)
-	}
-
-	return gocsv.Marshal(s, w.file)
+	return nil
 }
 
 func (w *CSVReportWriter) Close() error {

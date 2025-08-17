@@ -26,5 +26,5 @@ bin
 .cache
 
 # Report files
-report.csv
-**/report_test.csv
+report.*
+**/report_test.*

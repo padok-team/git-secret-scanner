@@ -1,6 +1,6 @@
 module github.com/padok-team/git-secret-scanner
 
-go 1.24.5
+go 1.25.0
 
 require (
 	github.com/go-git/go-git/v5 v5.16.2
@@ -8,7 +8,7 @@ require (
 	github.com/google/go-github/v74 v74.0.0
 	github.com/rs/zerolog v1.34.0
 	github.com/spf13/cobra v1.9.1
-	gitlab.com/gitlab-org/api/client-go v0.137.0
+	gitlab.com/gitlab-org/api/client-go v0.139.2
 )
 
 require (
@@ -34,8 +34,8 @@ require (
 	github.com/skeema/knownhosts v1.3.1 // indirect
 	github.com/spf13/pflag v1.0.7 // indirect
 	github.com/xanzy/ssh-agent v0.3.3 // indirect
-	golang.org/x/crypto v0.40.0 // indirect
-	golang.org/x/net v0.42.0 // indirect
+	golang.org/x/crypto v0.41.0 // indirect
+	golang.org/x/net v0.43.0 // indirect
 	golang.org/x/oauth2 v0.30.0 // indirect
 	golang.org/x/sys v0.35.0 // indirect
 	golang.org/x/time v0.12.0 // indirect
