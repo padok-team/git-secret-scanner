@@ -36,9 +36,52 @@ func (t ScanType) String() string {
 	}
 }
 
+type ReportFormat int
+
+const (
+	ReportFormatJSON ReportFormat = iota
+	ReportFormatCSV
+)
+
+func (f ReportFormat) String() string {
+	switch f {
+	case ReportFormatJSON:
+		return "json"
+	case ReportFormatCSV:
+		return "csv"
+	default:
+		// should never be reached
+		return ""
+	}
+}
+
+// ReportFormat must implement cobra pflag.Value interface
+func (f *ReportFormat) Set(s string) error {
+	switch s {
+	case ReportFormatJSON.String():
+		*f = ReportFormatJSON
+		return nil
+	case ReportFormatCSV.String():
+		*f = ReportFormatCSV
+		return nil
+	default:
+		return fmt.Errorf(
+			"format must be one of \"%s\" or \"%s\"",
+			ReportFormatJSON.String(),
+			ReportFormatCSV.String(),
+		)
+	}
+}
+
+// ReportFormat must implement cobra pflag.Value interface
+func (v *ReportFormat) Type() string {
+	return "{json,csv}"
+}
+
 type ScanArgs struct {
 	ScanType               ScanType
 	ReportPath             string
+	ReportFormat           ReportFormat
 	FingerprintsIgnorePath string
 	BaselinePath           string
 	MaxConcurrency         int
@@ -95,9 +138,20 @@ func Scan(ctx context.Context, s scm.Scm, args ScanArgs) error {
 
 	log.Info().Msg("scan initiated")
 
-	if utils.FileExistsAndNotEmpty(args.ReportPath) {
-		return fmt.Errorf("file \"%s\" already exists", args.ReportPath)
+	var writer report.ReportWriter
+
+	switch args.ReportFormat {
+	case ReportFormatJSON:
+		writer, err = report.NewJSONReportWriter(args.ReportPath)
+	case ReportFormatCSV:
+		writer, err = report.NewCSVReportWriter(args.ReportPath)
 	}
+
+	if err != nil {
+		return fmt.Errorf("failed to initialize report writer: %w", err)
+	}
+
+	defer writer.Close()
 
 	if err := LoadBaseline(args.BaselinePath); err != nil {
 		return fmt.Errorf("failed to load baseline: %w", err)
@@ -110,12 +164,6 @@ func Scan(ctx context.Context, s scm.Scm, args ScanArgs) error {
 	if err != nil {
 		return fmt.Errorf("failed to retrieve repositories list: %w", err)
 	}
-
-	writer, err := report.NewCSVReportWriter(args.ReportPath, true)
-	if err != nil {
-		return fmt.Errorf("failed to initialize report writer: %w", err)
-	}
-	defer writer.Close()
 
 	tasks := make([]*progress.Task, 0, len(repos))
 	for _, repo := range repos {

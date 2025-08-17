@@ -12,7 +12,7 @@ import (
 	"github.com/padok-team/git-secret-scanner/internal/report/secret"
 )
 
-var reportPath = path.Join("../../test/report_test.csv")
+var csvReportPath = path.Join("../../test/report_test.csv")
 
 var test1 secret.Secret = secret.Secret{
 	Repository:  "test1_repo",
@@ -48,17 +48,18 @@ var test3 secret.Secret = secret.Secret{
 }
 
 func TestNewCSVReportWriter(t *testing.T) {
-	writer, err := NewCSVReportWriter(reportPath, true)
+	writer, err := NewCSVReportWriter(csvReportPath)
 	if err != nil {
-		t.Fatalf(`NewCSVReportWriter("test/report.csv", true) = _, %v, want _, nil`, err)
+		t.Fatalf(`NewCSVReportWriter("test/report.csv") = _, %v, want _, nil`, err)
 	}
 
 	writer.file.WriteString("line1\n") //nolint:errcheck
 	writer.file.WriteString("line2\n") //nolint:errcheck
+	writer.file.WriteString("line3\n") //nolint:errcheck
 
-	f, err := os.Open(reportPath)
+	f, err := os.Open(csvReportPath)
 	if err != nil {
-		t.Fatalf(`os.Open(reportPath) = _, %v, want _, nil`, err)
+		t.Fatalf(`os.Open("test/report.csv") = _, %v, want _, nil`, err)
 	}
 
 	scanner := bufio.NewScanner(f)
@@ -71,35 +72,9 @@ func TestNewCSVReportWriter(t *testing.T) {
 	if scanner.Text() != "line2" {
 		t.Fatalf(`scanner.Text() = %s, want %s`, err, "line2")
 	}
-
-	writer.Close()
-	f.Close()
-
-	writer, err = NewCSVReportWriter(reportPath, false)
-	if err != nil {
-		t.Fatalf(`NewCSVReportWriter("test/report.csv", true) = _, %v, want _, nil`, err)
-	}
-
-	writer.file.WriteString("line3\n") //nolint:errcheck
-
-	f, err = os.Open(reportPath)
-	if err != nil {
-		t.Fatalf(`os.Open(reportPath) = _, %v, want _, nil`, err)
-	}
-
-	scanner = bufio.NewScanner(f)
-
-	scanner.Scan()
-	if scanner.Text() != "line1" {
-		t.Fatalf(`scanner.Text() = %q, want %q`, err, "line1")
-	}
-	scanner.Scan()
-	if scanner.Text() != "line2" {
-		t.Fatalf(`scanner.Text() = %q, want %q`, err, "line2")
-	}
 	scanner.Scan()
 	if scanner.Text() != "line3" {
-		t.Fatalf(`scanner.Text() = %q, want %q`, err, "line3")
+		t.Fatalf(`scanner.Text() = %s, want %s`, err, "line3")
 	}
 
 	writer.Close()
@@ -107,9 +82,9 @@ func TestNewCSVReportWriter(t *testing.T) {
 }
 
 func TestCSVReportWriterWriteAll(t *testing.T) {
-	writer, err := NewCSVReportWriter(reportPath, true)
+	writer, err := NewCSVReportWriter(csvReportPath)
 	if err != nil {
-		t.Fatalf(`NewCSVReportWriter("test/report.csv", true) = %v, want false, nil`, err)
+		t.Fatalf(`NewCSVReportWriter("test/report.csv") = %v, want false, nil`, err)
 	}
 
 	err = writer.WriteAll([]*secret.Secret{&test1, &test2, &test3})
@@ -117,16 +92,16 @@ func TestCSVReportWriterWriteAll(t *testing.T) {
 		t.Fatalf(`writer.WriteAll({test1, test2, test3}) = %v want nil`, err)
 	}
 
-	f, err := os.Open(reportPath)
+	f, err := os.Open(csvReportPath)
 	if err != nil {
-		t.Fatalf(`os.Open(reportPath) = _, %v, want _, nil`, err)
+		t.Fatalf(`os.Open("test/report.csv") = _, %v, want _, nil`, err)
 	}
 
 	scanner := bufio.NewScanner(f)
 
 	csv, err := gocsv.MarshalString([]*secret.Secret{&test1, &test2, &test3})
 	if err != nil {
-		t.Fatalf(`gocsv.MarshalString =%v, want nil`, err)
+		t.Fatalf(`gocsv.MarshalString = %v, want nil`, err)
 	}
 
 	wants := strings.Split(csv, "\n")
@@ -168,9 +143,9 @@ func TestCSVReportWriterWriteAll(t *testing.T) {
 }
 
 func TestReadCSVReport(t *testing.T) {
-	writer, err := NewCSVReportWriter(reportPath, true)
+	writer, err := NewCSVReportWriter(csvReportPath)
 	if err != nil {
-		t.Fatalf(`NewCSVReportWriter("test/report.csv", true) = _, %v, want _, nil`, err)
+		t.Fatalf(`NewCSVReportWriter("test/report.csv") = _, %v, want _, nil`, err)
 	}
 
 	slice := []*secret.Secret{&test1, &test2, &test3}
@@ -180,7 +155,7 @@ func TestReadCSVReport(t *testing.T) {
 		t.Fatalf(`writer.WriteAll({test1, test2, test3}) = %v want nil`, err)
 	}
 
-	s, err := ReadCSVReport(reportPath)
+	s, err := ReadCSVReport(csvReportPath)
 
 	if !reflect.DeepEqual(slice, s) || err != nil {
 		t.Fatalf(`ReadCSVReport("test/report.csv") = %v, %v want %v, nil`, s, err, slice)
