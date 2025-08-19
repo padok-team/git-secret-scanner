@@ -40,7 +40,7 @@ func (gi *GitleaksReportItem) ToSecret(repository string) (*secret.Secret, error
 	)
 }
 
-func GitleaksScan(ctx context.Context, repository string, directory string, full bool) (secret.SecretSet, error) {
+func Scan(ctx context.Context, repository string, directory string, full bool) (secret.SecretSet, error) {
 	reportPath := path.Join(directory, "gitleaks.json")
 
 	args := []string{

@@ -80,7 +80,7 @@ func (ri *TrufflehogReportItem) ToSecret(repository string) (*secret.Secret, err
 	)
 }
 
-func TrufflehogScan(ctx context.Context, repository string, directory string, full bool) (secret.SecretSet, error) {
+func Scan(ctx context.Context, repository string, directory string, full bool) (secret.SecretSet, error) {
 	args := []string{
 		"git",
 		"--no-update",

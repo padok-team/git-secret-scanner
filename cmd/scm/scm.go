@@ -4,17 +4,13 @@ import (
 	"fmt"
 
 	"github.com/padok-team/git-secret-scanner/internal/scan"
+	"github.com/padok-team/git-secret-scanner/internal/scan/scanners/gitleaks"
+	"github.com/padok-team/git-secret-scanner/internal/scan/scanners/trufflehog"
 	"github.com/padok-team/git-secret-scanner/internal/scm"
 	"github.com/padok-team/git-secret-scanner/internal/scm/git"
-	"github.com/padok-team/git-secret-scanner/internal/utils"
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
 	"github.com/spf13/cobra"
-)
-
-const (
-	ScannerBinaryTrufflehog string = "trufflehog"
-	ScannerBinaryGitleaks   string = "gitleaks"
 )
 
 var (
@@ -28,16 +24,36 @@ var (
 )
 
 func preRun(cmd *cobra.Command, args []string) {
-	if !utils.CommandExists(ScannerBinaryTrufflehog) {
-		log.Fatal().Msgf("executable %q not found in PATH", ScannerBinaryTrufflehog)
-	}
-	if !utils.CommandExists(ScannerBinaryGitleaks) {
-		log.Fatal().Msgf("executable %q not found in PATH", ScannerBinaryGitleaks)
-	}
-
 	if verbose {
 		log.Logger = log.Level(zerolog.DebugLevel)
 	}
+
+	if !trufflehog.CommandExists() {
+		log.Fatal().Msg("executable trufflehog not found in PATH")
+	}
+	if !gitleaks.CommandExists() {
+		log.Fatal().Msg("executable gitleaks not found in PATH")
+	}
+
+	ok, tVersion, err := trufflehog.IsVersionValid()
+	if err != nil {
+		log.Warn().Msgf("failed to read trufflehog version: %v", err)
+	} else if !ok {
+		log.Warn().
+			Msgf("this tool is designed to run with trufflehog v%s or later, found trufflehog v%s", trufflehog.MinVersion, tVersion)
+	}
+	ok, gVersion, err := gitleaks.IsVersionValid()
+	if err != nil {
+		log.Warn().Msgf("failed to read gitleaks version: %v", err)
+	} else if !ok {
+		log.Warn().
+			Msgf("this tool is designed to run with gitleaks v%s or later, found gitleaks v%s", gitleaks.MinVersion, gVersion)
+	}
+
+	log.Debug().
+		Str("gitleaks_version", gVersion).
+		Str("trufflehog_version", tVersion).
+		Msgf("running with gitleaks v%v and trufflehog v%v", gVersion, tVersion)
 
 	// parse flags
 	scmConfig.IncludeArchived = !noArchived
