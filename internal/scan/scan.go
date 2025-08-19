@@ -101,11 +101,11 @@ func repoScanTask(ctx context.Context, repository string, s scm.Scm, full bool, 
 		return fmt.Errorf("failed to clone repository %q: %w", repository, err)
 	}
 
-	thSecrets, err := trufflehog.TrufflehogScan(ctx, repository, destination, full)
+	thSecrets, err := trufflehog.Scan(ctx, repository, destination, full)
 	if err != nil {
 		return fmt.Errorf("trufflehog scan failed for repository %q: %w", repository, err)
 	}
-	glSecrets, err := gitleaks.GitleaksScan(ctx, repository, destination, full)
+	glSecrets, err := gitleaks.Scan(ctx, repository, destination, full)
 	if err != nil {
 		return fmt.Errorf("gitleaks scan failed for repository %q: %w", repository, err)
 	}
