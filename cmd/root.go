@@ -3,7 +3,7 @@ package cmd
 import (
 	"os"
 
-	"github.com/padok-team/git-secret-scanner/cmd/scm"
+	"github.com/padok-team/git-secret-scanner/cmd/scan"
 	"github.com/spf13/cobra"
 )
 
@@ -16,9 +16,13 @@ func init() {
 	// disable help command, prefer flags
 	rootCmd.SetHelpCommand(&cobra.Command{Hidden: true})
 
-	// register commands
+	// register scan commands
+	rootCmd.AddGroup(&cobra.Group{ID: "scan", Title: "Scan Commands:"})
+	rootCmd.AddCommand(scan.GithubCmd)
+	rootCmd.AddCommand(scan.GitlabCmd)
+
+	// register additional commands
 	rootCmd.AddCommand(versionCmd)
-	scm.AddScmCommands(rootCmd)
 
 	// help flag
 	rootCmd.Flags().BoolP("help", "h", false, "Help for git-secret-scanner")

@@ -1,4 +1,4 @@
-package scm
+package scan
 
 import (
 	"fmt"
@@ -91,10 +91,5 @@ func registerCommonFlags(cmd *cobra.Command) {
 	cmd.Flags().BoolVar(&verbose, "verbose", false, "Show verbose output")
 
 	// help flag
-	cmd.Flags().BoolP("help", "h", false, fmt.Sprintf("Help for command %s", cmd.Name()))
-}
-
-func AddScmCommands(cmd *cobra.Command) {
-	cmd.AddCommand(githubCmd)
-	cmd.AddCommand(gitlabCmd)
+	cmd.Flags().BoolP("help", "h", false, fmt.Sprintf("Help for %s", cmd.Name()))
 }

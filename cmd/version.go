@@ -19,5 +19,5 @@ var versionCmd = &cobra.Command{
 
 func init() {
 	// help flag
-	versionCmd.Flags().BoolP("help", "h", false, "Help for command version")
+	versionCmd.Flags().BoolP("help", "h", false, "Help for version")
 }
