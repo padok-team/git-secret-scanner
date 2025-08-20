@@ -2,6 +2,7 @@ package scan
 
 import (
 	"fmt"
+	"os/exec"
 
 	"github.com/padok-team/git-secret-scanner/internal/logging"
 	"github.com/padok-team/git-secret-scanner/internal/scan"
@@ -24,25 +25,27 @@ var (
 
 	verbose bool
 	noColor bool
+
+	scannerGitleaksPath   string
+	scannerTrufflehogPath string
 )
 
 func preRun(cmd *cobra.Command, args []string) {
 	logging.SetupLogger(verbose, noColor)
 
-	if !trufflehog.CommandExists() {
-		log.Fatal().Msg("executable trufflehog not found in PATH")
+	// check that gitleaks and trufflehog binary exists
+	gPath, err := exec.LookPath(scannerGitleaksPath)
+	if err != nil {
+		log.Fatal().Msgf("gitleaks binary not found: %v", err)
 	}
-	if !gitleaks.CommandExists() {
-		log.Fatal().Msg("executable gitleaks not found in PATH")
+	tPath, err := exec.LookPath(scannerTrufflehogPath)
+	if err != nil {
+		log.Fatal().Msgf("trufflehog binary not found: %v", err)
 	}
 
-	ok, tVersion, err := trufflehog.IsVersionValid()
-	if err != nil {
-		log.Warn().Msgf("failed to read trufflehog version: %v", err)
-	} else if !ok {
-		log.Warn().
-			Msgf("this tool is designed to run with trufflehog v%s or later, found trufflehog v%s", trufflehog.MinVersion, tVersion)
-	}
+	gitleaks.SetCommandPath(gPath)
+	trufflehog.SetCommandPath(tPath)
+
 	ok, gVersion, err := gitleaks.IsVersionValid()
 	if err != nil {
 		log.Warn().Msgf("failed to read gitleaks version: %v", err)
@@ -50,9 +53,18 @@ func preRun(cmd *cobra.Command, args []string) {
 		log.Warn().
 			Msgf("this tool is designed to run with gitleaks v%s or later, found gitleaks v%s", gitleaks.MinVersion, gVersion)
 	}
+	ok, tVersion, err := trufflehog.IsVersionValid()
+	if err != nil {
+		log.Warn().Msgf("failed to read trufflehog version: %v", err)
+	} else if !ok {
+		log.Warn().
+			Msgf("this tool is designed to run with trufflehog v%s or later, found trufflehog v%s", trufflehog.MinVersion, tVersion)
+	}
 
 	log.Debug().
+		Str("gitleaks_path", gPath).
 		Str("gitleaks_version", gVersion).
+		Str("trufflehog_path", tPath).
 		Str("trufflehog_version", tVersion).
 		Msgf("running with gitleaks v%v and trufflehog v%v", gVersion, tVersion)
 
@@ -90,6 +102,8 @@ func registerCommonFlags(cmd *cobra.Command) {
 	cmd.Flags().StringVarP(&scanArgs.FingerprintsIgnorePath, "fingerprints-ignore-path", "i", "", "Path to file with newline separated fingerprints (SHA-256) of secrets to ignore during the scan")
 	cmd.Flags().StringVarP(&scanArgs.BaselinePath, "baseline-path", "b", "", "Path to the CSV report to use as baseline for the scan")
 	cmd.Flags().IntVar(&scanArgs.MaxConcurrency, "max-concurrency", 5, "Maximum number of concurrent workers")
+	cmd.Flags().StringVar(&scannerGitleaksPath, "scanner-gitleaks-path", "gitleaks", "Custom path to the gitleaks binary")
+	cmd.Flags().StringVar(&scannerTrufflehogPath, "scanner-trufflehog-path", "trufflehog", "Custom path to the trufflehog binary")
 	cmd.Flags().BoolVar(&filesOnly, "files-only", false, "Only run the scan on the files of the default branch")
 	cmd.Flags().BoolVar(&noProgress, "no-progress", false, "Hide progress bar during scan")
 

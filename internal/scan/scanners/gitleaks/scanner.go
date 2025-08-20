@@ -58,7 +58,7 @@ func Scan(ctx context.Context, repository string, directory string, full bool) (
 
 	args = append(args, directory)
 
-	cmd := exec.CommandContext(ctx, "gitleaks", args...)
+	cmd := exec.CommandContext(ctx, gitleaksCommand, args...)
 
 	stderrP, err := cmd.StderrPipe()
 	if err != nil {

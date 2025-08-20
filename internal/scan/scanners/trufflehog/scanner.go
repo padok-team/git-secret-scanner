@@ -94,7 +94,7 @@ func Scan(ctx context.Context, repository string, directory string, full bool) (
 
 	args = append(args, "file://"+directory)
 
-	cmd := exec.CommandContext(ctx, "trufflehog", args...)
+	cmd := exec.CommandContext(ctx, trufflehogCommand, args...)
 
 	stdoutP, err := cmd.StdoutPipe()
 	if err != nil {

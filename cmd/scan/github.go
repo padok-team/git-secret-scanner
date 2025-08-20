@@ -13,7 +13,7 @@ import (
 const TokenEnvVarGithub string = "GITHUB_TOKEN"
 
 var GithubCmd = &cobra.Command{
-	Use:     "github",
+	Use:     "github -o/--org <org>",
 	GroupID: "scan",
 	Short:   "Scan for secrets in a GitHub organization",
 	Args:    cobra.NoArgs,

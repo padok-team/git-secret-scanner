@@ -13,7 +13,7 @@ import (
 const TokenEnvVarGitlab string = "GITLAB_TOKEN"
 
 var GitlabCmd = &cobra.Command{
-	Use:     "gitlab",
+	Use:     "gitlab -g/--group <group>",
 	GroupID: "scan",
 	Short:   "Scan for secrets in a Gitlab group",
 	Args:    cobra.NoArgs,

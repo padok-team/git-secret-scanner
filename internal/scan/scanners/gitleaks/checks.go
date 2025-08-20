@@ -9,14 +9,16 @@ import (
 
 const MinVersion string = "8.28.0"
 
-func CommandExists() bool {
-	return utils.CommandExists("gitleaks")
+var gitleaksCommand string = "gitleaks"
+
+func SetCommandPath(path string) {
+	gitleaksCommand = path
 }
 
 func Version() (string, error) {
-	cmd := exec.Command("gitleaks", "version")
+	cmd := exec.Command(gitleaksCommand, "version")
 
-	output, err := cmd.Output()
+	output, err := cmd.CombinedOutput()
 	if err != nil {
 		return "", err
 	}

@@ -9,14 +9,16 @@ import (
 
 const MinVersion string = "3.90.3"
 
-func CommandExists() bool {
-	return utils.CommandExists("trufflehog")
+var trufflehogCommand string = "trufflehog"
+
+func SetCommandPath(path string) {
+	trufflehogCommand = path
 }
 
 func Version() (string, error) {
-	cmd := exec.Command("trufflehog", "--version")
+	cmd := exec.Command(trufflehogCommand, "--version")
 
-	output, err := cmd.Output()
+	output, err := cmd.CombinedOutput()
 	if err != nil {
 		return "", err
 	}
