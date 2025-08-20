@@ -160,3 +160,12 @@ func (p *taskPool) Run() error {
 	p.Start()
 	return p.Wait()
 }
+
+func RunTasks(ctx context.Context, tasks []*Task, concurrency int) error {
+	pool := newTaskPool(ctx, concurrency, len(tasks))
+	for _, task := range tasks {
+		pool.AddTask(task)
+	}
+
+	return pool.Run()
+}
