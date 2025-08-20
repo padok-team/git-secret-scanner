@@ -1,13 +1,14 @@
 package gitleaks
 
 import (
+	"fmt"
 	"os/exec"
 	"strings"
 
 	"github.com/padok-team/git-secret-scanner/internal/utils"
 )
 
-const MinVersion string = "8.28.0"
+const MinVersion string = "v8.28.0"
 
 var gitleaksCommand string = "gitleaks"
 
@@ -23,7 +24,9 @@ func Version() (string, error) {
 		return "", err
 	}
 
-	return strings.TrimSuffix(string(output), "\n"), nil
+	version := fmt.Sprintf("v%s", strings.TrimPrefix(strings.TrimSuffix(string(output), "\n"), "v"))
+
+	return version, nil
 }
 
 func IsVersionValid() (bool, string, error) {

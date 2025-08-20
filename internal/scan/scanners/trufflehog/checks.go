@@ -1,13 +1,14 @@
 package trufflehog
 
 import (
+	"fmt"
 	"os/exec"
 	"strings"
 
 	"github.com/padok-team/git-secret-scanner/internal/utils"
 )
 
-const MinVersion string = "3.90.3"
+const MinVersion string = "v3.90.3"
 
 var trufflehogCommand string = "trufflehog"
 
@@ -24,7 +25,7 @@ func Version() (string, error) {
 	}
 
 	split := strings.Split(string(output), " ")
-	version := strings.TrimSuffix(split[len(split)-1], "\n")
+	version := fmt.Sprintf("v%s", strings.TrimPrefix(strings.TrimSuffix(split[len(split)-1], "\n"), "v"))
 
 	return version, nil
 }

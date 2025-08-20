@@ -51,14 +51,14 @@ func preRun(cmd *cobra.Command, args []string) {
 		log.Warn().Msgf("failed to read gitleaks version: %v", err)
 	} else if !ok {
 		log.Warn().
-			Msgf("this tool is designed to run with gitleaks v%s or later, found gitleaks v%s", gitleaks.MinVersion, gVersion)
+			Msgf("this tool is designed to run with gitleaks %s or later, found gitleaks %s", gitleaks.MinVersion, gVersion)
 	}
 	ok, tVersion, err := trufflehog.IsVersionValid()
 	if err != nil {
 		log.Warn().Msgf("failed to read trufflehog version: %v", err)
 	} else if !ok {
 		log.Warn().
-			Msgf("this tool is designed to run with trufflehog v%s or later, found trufflehog v%s", trufflehog.MinVersion, tVersion)
+			Msgf("this tool is designed to run with trufflehog %s or later, found trufflehog %s", trufflehog.MinVersion, tVersion)
 	}
 
 	log.Debug().
@@ -66,7 +66,7 @@ func preRun(cmd *cobra.Command, args []string) {
 		Str("gitleaks_version", gVersion).
 		Str("trufflehog_path", tPath).
 		Str("trufflehog_version", tVersion).
-		Msgf("running with gitleaks v%v and trufflehog v%v", gVersion, tVersion)
+		Msgf("running with gitleaks %s and trufflehog %s", gVersion, tVersion)
 
 	// parse flags
 	scmConfig.IncludeArchived = !noArchived
