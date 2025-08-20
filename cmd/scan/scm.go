@@ -3,12 +3,12 @@ package scan
 import (
 	"fmt"
 
+	"github.com/padok-team/git-secret-scanner/internal/logging"
 	"github.com/padok-team/git-secret-scanner/internal/scan"
 	"github.com/padok-team/git-secret-scanner/internal/scan/scanners/gitleaks"
 	"github.com/padok-team/git-secret-scanner/internal/scan/scanners/trufflehog"
 	"github.com/padok-team/git-secret-scanner/internal/scm"
 	"github.com/padok-team/git-secret-scanner/internal/scm/git"
-	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
 	"github.com/spf13/cobra"
 )
@@ -21,13 +21,13 @@ var (
 	sshClone   bool
 	filesOnly  bool
 	noProgress bool
-	verbose    bool
+
+	verbose bool
+	noColor bool
 )
 
 func preRun(cmd *cobra.Command, args []string) {
-	if verbose {
-		log.Logger = log.Level(zerolog.DebugLevel)
-	}
+	logging.SetupLogger(verbose, noColor)
 
 	if !trufflehog.CommandExists() {
 		log.Fatal().Msg("executable trufflehog not found in PATH")
@@ -92,6 +92,9 @@ func registerCommonFlags(cmd *cobra.Command) {
 	cmd.Flags().IntVar(&scanArgs.MaxConcurrency, "max-concurrency", 5, "Maximum number of concurrent workers")
 	cmd.Flags().BoolVar(&filesOnly, "files-only", false, "Only run the scan on the files of the default branch")
 	cmd.Flags().BoolVar(&noProgress, "no-progress", false, "Hide progress bar during scan")
+
+	// log flags
+	cmd.Flags().BoolVar(&noColor, "no-color", false, "Disable color output")
 	cmd.Flags().BoolVar(&verbose, "verbose", false, "Show verbose output")
 
 	// help flag
