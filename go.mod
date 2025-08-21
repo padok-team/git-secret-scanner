@@ -8,7 +8,7 @@ require (
 	github.com/google/go-github/v74 v74.0.0
 	github.com/rs/zerolog v1.34.0
 	github.com/spf13/cobra v1.9.1
-	gitlab.com/gitlab-org/api/client-go v0.141.1
+	gitlab.com/gitlab-org/api/client-go v0.141.2
 	golang.org/x/mod v0.27.0
 )
 
@@ -27,7 +27,7 @@ require (
 	github.com/hashicorp/go-retryablehttp v0.7.8 // indirect
 	github.com/inconshreveable/mousetrap v1.1.0 // indirect
 	github.com/jbenet/go-context v0.0.0-20150711004518-d14ea06fba99 // indirect
-	github.com/kevinburke/ssh_config v1.2.0 // indirect
+	github.com/kevinburke/ssh_config v1.4.0 // indirect
 	github.com/mattn/go-colorable v0.1.14 // indirect
 	github.com/mattn/go-isatty v0.0.20 // indirect
 	github.com/pjbgf/sha1cd v0.4.0 // indirect

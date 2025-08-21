@@ -2,7 +2,6 @@ package utils
 
 import (
 	"os"
-	"os/exec"
 	"path"
 )
 
@@ -12,11 +11,6 @@ const (
 
 func TempDirPath() string {
 	return path.Join(os.TempDir(), TempDirName)
-}
-
-func CommandExists(cmd string) bool {
-	_, err := exec.LookPath(cmd)
-	return err == nil
 }
 
 func FileExistsAndNotEmpty(path string) bool {

@@ -1,4 +1,4 @@
-package scm
+package scan
 
 import (
 	"context"
@@ -12,11 +12,12 @@ import (
 
 const TokenEnvVarGithub string = "GITHUB_TOKEN"
 
-var githubCmd = &cobra.Command{
-	Use:    "github",
-	Short:  "Scan for secrets in a GitHub organization",
-	Args:   cobra.NoArgs,
-	PreRun: preRun,
+var GithubCmd = &cobra.Command{
+	Use:     "github -o/--org <org>",
+	GroupID: "scan",
+	Short:   "Scan for secrets in a GitHub organization",
+	Args:    cobra.NoArgs,
+	PreRun:  preRun,
 	Run: func(cmd *cobra.Command, args []string) {
 		token := os.Getenv(TokenEnvVarGithub)
 		if token == "" {
@@ -44,8 +45,8 @@ var githubCmd = &cobra.Command{
 }
 
 func init() {
-	githubCmd.Flags().StringVarP(&scmConfig.Org, "org", "o", "", "Organization to scan (required)")
-	githubCmd.MarkFlagRequired("org") //nolint:errcheck
+	GithubCmd.Flags().StringVarP(&scmConfig.Org, "org", "o", "", "Organization to scan (required)")
+	GithubCmd.MarkFlagRequired("org") //nolint:errcheck
 
-	registerCommonFlags(githubCmd)
+	registerCommonFlags(GithubCmd)
 }

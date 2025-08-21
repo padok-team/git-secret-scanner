@@ -1,28 +1,31 @@
 package trufflehog
 
 import (
+	"fmt"
 	"os/exec"
 	"strings"
 
 	"github.com/padok-team/git-secret-scanner/internal/utils"
 )
 
-const MinVersion string = "3.90.3"
+const MinVersion string = "v3.90.3"
 
-func CommandExists() bool {
-	return utils.CommandExists("trufflehog")
+var trufflehogCommand string = "trufflehog"
+
+func SetCommandPath(path string) {
+	trufflehogCommand = path
 }
 
 func Version() (string, error) {
-	cmd := exec.Command("trufflehog", "--version")
+	cmd := exec.Command(trufflehogCommand, "--version")
 
-	output, err := cmd.Output()
+	output, err := cmd.CombinedOutput()
 	if err != nil {
 		return "", err
 	}
 
 	split := strings.Split(string(output), " ")
-	version := strings.TrimSuffix(split[len(split)-1], "\n")
+	version := fmt.Sprintf("v%s", strings.TrimPrefix(strings.TrimSuffix(split[len(split)-1], "\n"), "v"))
 
 	return version, nil
 }

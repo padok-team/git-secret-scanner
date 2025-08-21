@@ -1,27 +1,32 @@
 package gitleaks
 
 import (
+	"fmt"
 	"os/exec"
 	"strings"
 
 	"github.com/padok-team/git-secret-scanner/internal/utils"
 )
 
-const MinVersion string = "8.28.0"
+const MinVersion string = "v8.28.0"
 
-func CommandExists() bool {
-	return utils.CommandExists("gitleaks")
+var gitleaksCommand string = "gitleaks"
+
+func SetCommandPath(path string) {
+	gitleaksCommand = path
 }
 
 func Version() (string, error) {
-	cmd := exec.Command("gitleaks", "version")
+	cmd := exec.Command(gitleaksCommand, "version")
 
-	output, err := cmd.Output()
+	output, err := cmd.CombinedOutput()
 	if err != nil {
 		return "", err
 	}
 
-	return strings.TrimSuffix(string(output), "\n"), nil
+	version := fmt.Sprintf("v%s", strings.TrimPrefix(strings.TrimSuffix(string(output), "\n"), "v"))
+
+	return version, nil
 }
 
 func IsVersionValid() (bool, string, error) {

@@ -25,22 +25,6 @@ func TestTempDirPath(t *testing.T) {
 	}
 }
 
-func TestCommandExists(t *testing.T) {
-	test := CommandExists("ls")
-	want := true
-
-	if test != want {
-		t.Fatalf(`CommandExists("ls") = %t, want %t`, test, want)
-	}
-
-	test = CommandExists("thisisnotacommand!")
-	want = false
-
-	if test != want {
-		t.Fatalf(`CommandExists("thisisnotacommand!") = %t, want %t`, test, want)
-	}
-}
-
 func TestFileExistsAndNotEmpty(t *testing.T) {
 	test := FileExistsAndNotEmpty("../../test/testdata/baseline.csv")
 	want := true

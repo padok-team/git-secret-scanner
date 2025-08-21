@@ -1,4 +1,4 @@
-package scm
+package scan
 
 import (
 	"context"
@@ -12,11 +12,12 @@ import (
 
 const TokenEnvVarGitlab string = "GITLAB_TOKEN"
 
-var gitlabCmd = &cobra.Command{
-	Use:    "gitlab",
-	Short:  "Scan for secrets in a Gitlab group",
-	Args:   cobra.NoArgs,
-	PreRun: preRun,
+var GitlabCmd = &cobra.Command{
+	Use:     "gitlab -g/--group <group>",
+	GroupID: "scan",
+	Short:   "Scan for secrets in a Gitlab group",
+	Args:    cobra.NoArgs,
+	PreRun:  preRun,
 	Run: func(cmd *cobra.Command, args []string) {
 		token := os.Getenv(TokenEnvVarGitlab)
 		if token == "" {
@@ -44,8 +45,8 @@ var gitlabCmd = &cobra.Command{
 }
 
 func init() {
-	gitlabCmd.Flags().StringVarP(&scmConfig.Org, "group", "g", "", "Group to scan (required)")
-	gitlabCmd.MarkFlagRequired("group") //nolint:errcheck
+	GitlabCmd.Flags().StringVarP(&scmConfig.Org, "group", "g", "", "Group to scan (required)")
+	GitlabCmd.MarkFlagRequired("group") //nolint:errcheck
 
-	registerCommonFlags(gitlabCmd)
+	registerCommonFlags(GitlabCmd)
 }

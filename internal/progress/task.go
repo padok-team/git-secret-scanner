@@ -83,23 +83,27 @@ func newTaskPool(ctx context.Context, concurrency int, size int) *taskPool {
 func (p *taskPool) Start() {
 	p.start.Do(func() {
 		close(p.tasks)
-		for i := 0; i < p.numWorkers; i++ {
-			go func(workerNum int) {
-				for task := range p.tasks {
-					select {
-					case <-p.quit:
-						return
-					default:
-						if err := task.Execute(p.ctx); err != nil {
-							p.Stop(err)
-						} else {
-							if count := p.incrTasksDoneCount(); count == p.Size() {
-								p.Stop(nil)
+		if len(p.tasks) == 0 {
+			p.Stop(nil)
+		} else {
+			for i := 0; i < p.numWorkers; i++ {
+				go func(workerNum int) {
+					for task := range p.tasks {
+						select {
+						case <-p.quit:
+							return
+						default:
+							if err := task.Execute(p.ctx); err != nil {
+								p.Stop(err)
+							} else {
+								if count := p.incrTasksDoneCount(); count == p.Size() {
+									p.Stop(nil)
+								}
 							}
 						}
 					}
-				}
-			}(i)
+				}(i)
+			}
 		}
 	})
 }
@@ -159,4 +163,13 @@ func (p *taskPool) Wait() error {
 func (p *taskPool) Run() error {
 	p.Start()
 	return p.Wait()
+}
+
+func RunTasks(ctx context.Context, tasks []*Task, concurrency int) error {
+	pool := newTaskPool(ctx, concurrency, len(tasks))
+	for _, task := range tasks {
+		pool.AddTask(task)
+	}
+
+	return pool.Run()
 }

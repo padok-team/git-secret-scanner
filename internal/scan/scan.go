@@ -85,6 +85,7 @@ type ScanArgs struct {
 	FingerprintsIgnorePath string
 	BaselinePath           string
 	MaxConcurrency         int
+	ShowProgress           bool
 }
 
 func repoScanTask(ctx context.Context, repository string, s scm.Scm, full bool, w report.ReportWriter) error {
@@ -173,7 +174,12 @@ func Scan(ctx context.Context, s scm.Scm, args ScanArgs) error {
 		}))
 	}
 
-	if err := progress.RunTasksWithProgressBar(ctx, "Scanning repositories...", tasks, args.MaxConcurrency); err != nil {
+	if args.ShowProgress {
+		err = progress.RunTasksWithProgressBar(ctx, "Scanning repositories...", tasks, args.MaxConcurrency)
+	} else {
+		err = progress.RunTasks(ctx, tasks, args.MaxConcurrency)
+	}
+	if err != nil {
 		return fmt.Errorf("repositories scan failed: %w", err)
 	}
 
