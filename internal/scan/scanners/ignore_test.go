@@ -12,7 +12,7 @@ import (
 var testPath string = path.Join(utils.TempDirPath(), "tests")
 
 func TestIsLineIgnored(t *testing.T) {
-	err := git.Clone(context.Background(), "https://github.com/gitleaks/gitleaks", path.Join(testPath, "gitleaks"), false, true)
+	err := git.Clone(context.Background(), "https://github.com/gitleaks/gitleaks", path.Join(testPath, "gitleaks"), false, false, true)
 	if err != nil {
 		t.Fatalf(`git.Clone("https://github.com/gitleaks/gitleaks", ...) = %v, nil`, err)
 	}
@@ -24,7 +24,7 @@ func TestIsLineIgnored(t *testing.T) {
 		t.Fatalf(`IsLineIgnored(gitleaks, "abfd0f3fdcb7925ff94184fba67b5d444cc42f92", ...) = %t, %v, want %t, nil`, test, err, want)
 	}
 
-	err = git.Clone(context.Background(), "https://github.com/trufflesecurity/trufflehog", path.Join(testPath, "trufflehog"), false, true)
+	err = git.Clone(context.Background(), "https://github.com/trufflesecurity/trufflehog", path.Join(testPath, "trufflehog"), false, false, true)
 	if err != nil {
 		t.Fatalf(`git.Clone("https://github.com/trufflesecurity/trufflehog", ...) = %v, nil`, err)
 	}
