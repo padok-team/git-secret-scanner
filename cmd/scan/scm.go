@@ -18,11 +18,11 @@ var (
 	scanArgs  scan.ScanArgs
 	scmConfig scm.ScmConfig
 
-	noArchived bool
-	sshClone   bool
-	filesOnly  bool
-	noProgress bool
-	bareClone  bool
+	noArchived  bool
+	sshClone    bool
+	filesOnly   bool
+	noProgress  bool
+	noBareClone bool
 
 	verbose bool
 	noColor bool
@@ -78,7 +78,7 @@ func preRun(cmd *cobra.Command, args []string) {
 		scanArgs.ScanType = scan.ScanTypeFilesOnly
 	}
 	scanArgs.ShowProgress = !noProgress
-	scanArgs.BareClone = bareClone
+	scanArgs.BareClone = !noBareClone
 
 	log.Debug().
 		Str("scan_type", scanArgs.ScanType.String()).
@@ -109,7 +109,7 @@ func registerCommonFlags(cmd *cobra.Command) {
 	cmd.Flags().StringVar(&scannerTrufflehogPath, "scanner-trufflehog-path", "trufflehog", "Custom path to the trufflehog binary")
 	cmd.Flags().BoolVar(&filesOnly, "files-only", false, "Only run the scan on the files of the default branch")
 	cmd.Flags().BoolVar(&noProgress, "no-progress", false, "Hide progress bar during scan")
-	cmd.Flags().BoolVar(&bareClone, "bare-clone", false, "Clone repositories as bare (no working directory, .gitleaks.toml will be ignored)")
+	cmd.Flags().BoolVar(&noBareClone, "no-bare-clone", false, "Clone repositories with working directory")
 
 	// log flags
 	cmd.Flags().BoolVar(&noColor, "no-color", false, "Disable color output")
