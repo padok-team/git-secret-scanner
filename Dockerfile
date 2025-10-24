@@ -1,5 +1,5 @@
 # Build git-secret-scanner binary
-FROM docker.io/library/golang:1.25.1@sha256:76a94c4a37aaab9b1b35802af597376b8588dc54cd198f8249633b4e117d9fcc AS builder
+FROM docker.io/library/golang:1.25.1@sha256:d7098379b7da665ab25b99795465ec320b1ca9d4addb9f77409c4827dc904211 AS builder
 
 ARG TARGETOS
 ARG TARGETARCH
