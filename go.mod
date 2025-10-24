@@ -3,7 +3,7 @@ module github.com/padok-team/git-secret-scanner
 go 1.25.0
 
 require (
-	github.com/go-git/go-git/v5 v5.16.2
+	github.com/go-git/go-git/v5 v5.16.3
 	github.com/gocarina/gocsv v0.0.0-20240520201108-78e41c74b4b1
 	github.com/google/go-github/v74 v74.0.0
 	github.com/rs/zerolog v1.34.0
