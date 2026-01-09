@@ -9,7 +9,7 @@ require (
 	github.com/rs/zerolog v1.34.0
 	github.com/spf13/cobra v1.10.1
 	gitlab.com/gitlab-org/api/client-go v0.142.6
-	golang.org/x/mod v0.27.0
+	golang.org/x/mod v0.32.0
 )
 
 require (
