@@ -3,7 +3,7 @@ package scm
 import (
 	"context"
 
-	"github.com/google/go-github/v74/github"
+	"github.com/google/go-github/v82/github"
 	"github.com/padok-team/git-secret-scanner/internal/scm/git"
 	"github.com/rs/zerolog/log"
 )
