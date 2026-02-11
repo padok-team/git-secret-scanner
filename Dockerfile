@@ -43,7 +43,7 @@ FROM ghcr.io/gitleaks/gitleaks:v8.28.0@sha256:cdbb7c955abce02001a9f6c9f602fb195b
 # ---
 
 # Retrieve trufflehog binary
-FROM docker.io/trufflesecurity/trufflehog:3.90.3@sha256:f9a92af4d46ca171bffa5c00509414a19d9887c9ed4fe98d1f43757b52600e39 AS trufflehog
+FROM docker.io/trufflesecurity/trufflehog:3.90.13@sha256:a434a86ae173002a90086f860b0b7f670dc959b54fb4f4bf5aacd9d08c550942 AS trufflehog
 
 # ---
 
