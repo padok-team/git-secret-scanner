@@ -38,12 +38,12 @@ RUN CGO_ENABLED=0 GOOS=${TARGETOS:-linux} GOARCH=${TARGETARCH} go build -a \
 # ---
 
 # Retrieve gitleaks binary
-FROM ghcr.io/gitleaks/gitleaks:v8.28.0@sha256:cdbb7c955abce02001a9f6c9f602fb195b7fadc1e812065883f695d1eeaba854 AS gitleaks
+FROM ghcr.io/gitleaks/gitleaks:v8.30.0@sha256:691af3c7c5a48b16f187ce3446d5f194838f91238f27270ed36eef6359a574d9 AS gitleaks
 
 # ---
 
 # Retrieve trufflehog binary
-FROM docker.io/trufflesecurity/trufflehog:3.90.3@sha256:f9a92af4d46ca171bffa5c00509414a19d9887c9ed4fe98d1f43757b52600e39 AS trufflehog
+FROM docker.io/trufflesecurity/trufflehog:3.93.3@sha256:06c1f230512cbb694954716fa5e0adbfb95809c7bfb5a50c25110847417b69db AS trufflehog
 
 # ---
 
