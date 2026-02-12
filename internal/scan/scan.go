@@ -86,14 +86,15 @@ type ScanArgs struct {
 	BaselinePath           string
 	MaxConcurrency         int
 	ShowProgress           bool
+	BareClone              bool
 }
 
-func repoScanTask(ctx context.Context, repository string, s scm.Scm, full bool, w report.ReportWriter) error {
+func repoScanTask(ctx context.Context, repository string, s scm.Scm, full bool, bareClone bool, w report.ReportWriter) error {
 	destination := path.Join(utils.TempDirPath(), repository)
 
 	url := s.GitRepoUrl(repository)
 
-	err := git.Clone(ctx, url, destination, !full, true)
+	err := git.Clone(ctx, url, destination, !full, bareClone, true)
 	if err != nil {
 		// if remote is empty, scan next repository
 		if errors.Is(err, transport.ErrEmptyRemoteRepository) {
@@ -170,7 +171,7 @@ func Scan(ctx context.Context, s scm.Scm, args ScanArgs) error {
 	for _, repo := range repos {
 		repo := repo // closure
 		tasks = append(tasks, progress.NewTask(func(ctx context.Context) error {
-			return repoScanTask(ctx, repo, s, args.ScanType == ScanTypeFull, writer)
+			return repoScanTask(ctx, repo, s, args.ScanType == ScanTypeFull, args.BareClone, writer)
 		}))
 	}
 
