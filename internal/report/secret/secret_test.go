@@ -15,7 +15,7 @@ var test1 Secret = Secret{
 	Valid:       SecretValidityInvalid,
 	Scanners:    SecretScannersGitleaks,
 	Cleartext:   "test1_cleartext",
-	Fingerprint: "test1_repo:e2acefa38de1bb02673cd2496a4663a3c6c42508:test1_path:10",
+	Fingerprint: NewFingerprint("test1_repo", "e2acefa38de1bb02673cd2496a4663a3c6c42508", "test1_path", 10),
 }
 
 var test2 Secret = Secret{
@@ -27,7 +27,7 @@ var test2 Secret = Secret{
 	Valid:       SecretValidityUnknown,
 	Scanners:    SecretScannersAll,
 	Cleartext:   "",
-	Fingerprint: "hardcoded_fingerprint",
+	Fingerprint: Fingerprint("hardcoded_fingerprint"),
 }
 
 var test3 Secret = Secret{
@@ -39,7 +39,7 @@ var test3 Secret = Secret{
 	Valid:       SecretValidityUnknown,
 	Scanners:    SecretScannersTrufflehog,
 	Cleartext:   "test1_cleartext",
-	Fingerprint: "test1_repo:e2acefa38de1bb02673cd2496a4663a3c6c42508:test1_path:10",
+	Fingerprint: NewFingerprint("test1_repo", "e2acefa38de1bb02673cd2496a4663a3c6c42508", "test1_path", 10),
 }
 
 func TestNewSecret(t *testing.T) {
@@ -52,7 +52,7 @@ func TestNewSecret(t *testing.T) {
 		SecretValidityInvalid,
 		SecretScannersGitleaks,
 		"test1_cleartext",
-		"",
+		nil,
 	)
 	want := &test1
 
@@ -60,6 +60,7 @@ func TestNewSecret(t *testing.T) {
 		t.Fatalf(`NewSecret(...test1) = %v, %v, want %v, nil`, test, err, want)
 	}
 
+	fp := Fingerprint("hardcoded_fingerprint")
 	test, err = NewSecret(
 		"test2_repo",
 		"test2_path",
@@ -69,7 +70,7 @@ func TestNewSecret(t *testing.T) {
 		SecretValidityUnknown,
 		SecretScannersAll,
 		"",
-		"hardcoded_fingerprint",
+		&fp,
 	)
 	want = &test2
 
@@ -85,7 +86,7 @@ func TestNewSecret(t *testing.T) {
 		SecretValidityUnknown,
 		SecretScannersTrufflehog,
 		"test1_cleartext",
-		"",
+		nil,
 	)
 	want = &test3
 

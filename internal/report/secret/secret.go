@@ -158,6 +158,12 @@ func (ss *SecretScanners) UnmarshalCSV(s string) error {
 	}
 }
 
+type Fingerprint string
+
+func NewFingerprint(repository string, commit string, path string, line int) Fingerprint {
+	return Fingerprint(fmt.Sprintf("%s:%s:%s:%d", repository, commit, path, line))
+}
+
 var ErrMergeSecretsNotEqual error = errors.New("not equal secrets cannot be merge")
 
 type Secret struct {
@@ -169,12 +175,23 @@ type Secret struct {
 	Valid       SecretValidity `csv:"valid" json:"valid"`
 	Scanners    SecretScanners `csv:"scanners" json:"scanners"`
 	Cleartext   string         `csv:"cleartext" json:"cleartext"`
-	Fingerprint string         `csv:"fingerprint" json:"fingerprint"`
+	Fingerprint Fingerprint    `csv:"fingerprint" json:"fingerprint"`
 }
 
-func NewSecret(repository string, path string, kind SecretKind, commit string, line int, valid SecretValidity, scanners SecretScanners, cleartext string, fingerprint string) (*Secret, error) {
-	if fingerprint == "" {
-		fingerprint = fmt.Sprintf("%s:%s:%s:%d", repository, commit, path, line)
+func NewSecret(
+	repository string,
+	path string,
+	kind SecretKind,
+	commit string,
+	line int,
+	valid SecretValidity,
+	scanners SecretScanners,
+	cleartext string,
+	fingerprint *Fingerprint,
+) (*Secret, error) {
+	if fingerprint == nil {
+		fp := NewFingerprint(repository, commit, path, line)
+		fingerprint = &fp
 	}
 
 	return &Secret{
@@ -186,7 +203,7 @@ func NewSecret(repository string, path string, kind SecretKind, commit string, l
 		Valid:       valid,
 		Scanners:    scanners,
 		Cleartext:   cleartext,
-		Fingerprint: fingerprint,
+		Fingerprint: *fingerprint,
 	}, nil
 }
 

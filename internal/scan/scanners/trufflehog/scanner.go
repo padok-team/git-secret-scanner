@@ -9,7 +9,6 @@ import (
 	"os/exec"
 
 	"github.com/padok-team/git-secret-scanner/internal/report/secret"
-	"github.com/padok-team/git-secret-scanner/internal/scan/scanners"
 )
 
 type TrufflehogReportItem struct {
@@ -76,7 +75,7 @@ func (ri *TrufflehogReportItem) ToSecret(repository string) (*secret.Secret, err
 		ri.Verified,
 		secret.SecretScannersTrufflehog,
 		ri.Raw,
-		"",
+		nil,
 	)
 }
 
@@ -124,18 +123,11 @@ func Scan(ctx context.Context, repository string, directory string, full bool) (
 			continue
 		}
 
-		ignored, err := scanners.IsLineIgnored(directory, item.Commit, item.File, item.Line)
+		s, err := item.ToSecret(repository)
 		if err != nil {
 			return nil, err
 		}
-
-		if !ignored {
-			s, err := item.ToSecret(repository)
-			if err != nil {
-				return nil, err
-			}
-			secrets.Add(s)
-		}
+		secrets.Add(s)
 	}
 
 	stderr, err := io.ReadAll(stderrP)

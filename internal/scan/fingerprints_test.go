@@ -3,6 +3,8 @@ package scan
 import (
 	"reflect"
 	"testing"
+
+	"github.com/padok-team/git-secret-scanner/internal/report/secret"
 )
 
 func TestLoadIgnoredFingerprints(t *testing.T) {
@@ -11,7 +13,7 @@ func TestLoadIgnoredFingerprints(t *testing.T) {
 		t.Fatalf(`LoadIgnoredFingerprints("test/testdata/.fingerprintsignore") = %v, want nil`, err)
 	}
 
-	want := map[string][]string{
+	want := map[string][]secret.Fingerprint{
 		"test1_repo": {
 			"test1_repo:e2acefa38de1bb02673cd2496a4663a3c6c42508:test1_path:10",
 		},
