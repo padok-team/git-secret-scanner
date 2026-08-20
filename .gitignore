@@ -21,6 +21,9 @@ go.work
 dist
 bin
 
+# node_modules
+node_modules
+
 # VSCode config files
 .vscode
 .cache

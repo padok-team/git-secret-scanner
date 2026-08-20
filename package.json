@@ -1,0 +1,16 @@
+{
+  "name": "git-secret-scanner",
+  "version": "1.0.0",
+  "type": "module",
+  "devEngines": {
+    "packageManager": {
+      "name": "pnpm",
+      "version": "^11.22.0",
+      "onFail": "download"
+    }
+  },
+  "devDependencies": {
+    "@commitlint/cli": "21.2.2",
+    "@commitlint/config-conventional": "21.2.2"
+  }
+}
