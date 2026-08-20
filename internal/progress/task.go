@@ -130,6 +130,15 @@ func (p *taskPool) Size() int {
 	return p.size
 }
 
+// TasksDone returns the number of completed tasks, guarded by the pool lock
+// so it can be safely read concurrently from worker goroutines.
+func (p *taskPool) TasksDone() int {
+	p.lock.Lock()
+	count := p.TasksDoneCount
+	p.lock.Unlock()
+	return count
+}
+
 func (p *taskPool) AddTask(t *Task) {
 	if len(p.tasks) < p.Size() {
 		select {

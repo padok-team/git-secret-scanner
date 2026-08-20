@@ -58,7 +58,7 @@ func RunTasksWithProgressBar(ctx context.Context, description string, tasks []*T
 		pool.AddTask(task.Wrap(func(fn TaskFunc) TaskFunc {
 			return func(ctx context.Context) error {
 				err := fn(ctx)
-				fmt.Printf("%s\n\033[1A", bar.View(pool.TasksDoneCount*100/pool.Size()))
+				fmt.Printf("%s\n\033[1A", bar.View(pool.TasksDone()*100/pool.Size()))
 				return err
 			}
 		}))
