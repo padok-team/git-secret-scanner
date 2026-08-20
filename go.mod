@@ -8,7 +8,7 @@ require (
 	github.com/google/go-github/v90 v90.0.0
 	github.com/rs/zerolog v1.35.1
 	github.com/spf13/cobra v1.10.2
-	gitlab.com/gitlab-org/api/client-go v1.46.0
+	gitlab.com/gitlab-org/api/client-go/v2 v2.58.1
 	golang.org/x/mod v0.40.0
 )
 
