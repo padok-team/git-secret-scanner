@@ -1,5 +1,5 @@
 # Build git-secret-scanner binary
-FROM docker.io/library/golang:1.26.0@sha256:c83e68f3ebb6943a2904fa66348867d108119890a2c6a2e6f07b38d0eb6c25c5 AS builder
+FROM docker.io/library/golang:1.27-alpine@sha256:4c9fe60190a2a3350ddc51de80d0224b8a6698d12bdfc999fee45ea9d6c46dbc AS builder
 
 ARG TARGETOS
 ARG TARGETARCH
@@ -37,18 +37,8 @@ RUN CGO_ENABLED=0 GOOS=${TARGETOS:-linux} GOARCH=${TARGETARCH} go build -a \
 
 # ---
 
-# Retrieve gitleaks binary
-FROM ghcr.io/gitleaks/gitleaks:v8.30.0@sha256:691af3c7c5a48b16f187ce3446d5f194838f91238f27270ed36eef6359a574d9 AS gitleaks
-
-# ---
-
-# Retrieve trufflehog binary
-FROM docker.io/trufflesecurity/trufflehog:3.93.3@sha256:06c1f230512cbb694954716fa5e0adbfb95809c7bfb5a50c25110847417b69db AS trufflehog
-
-# ---
-
 # Build the final image
-FROM docker.io/library/alpine:3.23.3@sha256:25109184c71bdad752c8312a8623239686a9a2071e8825f20acb8f2198c3f659
+FROM docker.io/library/alpine:3.24@sha256:28bd5fe8b56d1bd048e5babf5b10710ebe0bae67db86916198a6eec434943f8b AS runtime
 
 WORKDIR /home/git-secret-scanner
 
@@ -75,8 +65,10 @@ RUN adduser \
     $USER
 
 # Copy the scanners to the production image from the scanners stage
-COPY --from=gitleaks --chmod=555 /usr/bin/gitleaks /usr/local/bin/gitleaks
-COPY --from=trufflehog --chmod=555 /usr/bin/trufflehog /usr/local/bin/trufflehog
+COPY --from=ghcr.io/gitleaks/gitleaks:v8.30.0@sha256:691af3c7c5a48b16f187ce3446d5f194838f91238f27270ed36eef6359a574d9 \
+    --chmod=555 /usr/bin/gitleaks /usr/local/bin/gitleaks
+COPY --from=docker.io/trufflesecurity/trufflehog:3.93.3@sha256:06c1f230512cbb694954716fa5e0adbfb95809c7bfb5a50c25110847417b69db \
+    --chmod=555 /usr/bin/trufflehog /usr/local/bin/trufflehog
 
 # Copy the binary to the production image from the builder stage
 COPY --from=builder --chmod=511 /workspace/bin/git-secret-scanner /usr/local/bin/git-secret-scanner
