@@ -67,7 +67,7 @@ RUN adduser \
 # Copy the scanners to the production image from the scanners stage
 COPY --from=ghcr.io/gitleaks/gitleaks:v8.30.0@sha256:691af3c7c5a48b16f187ce3446d5f194838f91238f27270ed36eef6359a574d9 \
     --chmod=555 /usr/bin/gitleaks /usr/local/bin/gitleaks
-COPY --from=docker.io/trufflesecurity/trufflehog:3.93.3@sha256:06c1f230512cbb694954716fa5e0adbfb95809c7bfb5a50c25110847417b69db \
+COPY --from=docker.io/trufflesecurity/trufflehog:3.97.0@sha256:ff4c95e9df7d645daf2140e3ca1039031c63106268d5fbb25feb43ceca1bcc33 \
     --chmod=555 /usr/bin/trufflehog /usr/local/bin/trufflehog
 
 # Copy the binary to the production image from the builder stage
