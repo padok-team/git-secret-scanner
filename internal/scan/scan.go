@@ -9,8 +9,7 @@ import (
 	"github.com/go-git/go-git/v5/plumbing/transport"
 	"github.com/padok-team/git-secret-scanner/internal/progress"
 	"github.com/padok-team/git-secret-scanner/internal/report"
-	"github.com/padok-team/git-secret-scanner/internal/scan/scanners/gitleaks"
-	"github.com/padok-team/git-secret-scanner/internal/scan/scanners/trufflehog"
+	"github.com/padok-team/git-secret-scanner/internal/scan/scanners"
 	"github.com/padok-team/git-secret-scanner/internal/scm"
 	"github.com/padok-team/git-secret-scanner/internal/scm/git"
 	"github.com/padok-team/git-secret-scanner/internal/utils"
@@ -102,17 +101,14 @@ func repoScanTask(ctx context.Context, repository string, s scm.Scm, full bool, 
 		return fmt.Errorf("failed to clone repository %q: %w", repository, err)
 	}
 
-	thSecrets, err := trufflehog.Scan(ctx, repository, destination, full)
+	scanner := scanners.NewRepositoryScanner(repository, destination)
+
+	foundSecrets, err := scanner.Scan(ctx, full)
 	if err != nil {
-		return fmt.Errorf("trufflehog scan failed for repository %q: %w", repository, err)
-	}
-	glSecrets, err := gitleaks.Scan(ctx, repository, destination, full)
-	if err != nil {
-		return fmt.Errorf("gitleaks scan failed for repository %q: %w", repository, err)
+		return fmt.Errorf("scan failed for repository %q: %w", repository, err)
 	}
 
-	secrets := thSecrets.
-		Union(glSecrets).
+	secrets := foundSecrets.
 		Diff(GetRepoBaseline(repository)).
 		DropFingerprints(GetRepoIgnoredFingerprints(repository))
 

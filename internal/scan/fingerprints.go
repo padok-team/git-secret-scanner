@@ -7,19 +7,20 @@ import (
 	"regexp"
 	"strings"
 
+	"github.com/padok-team/git-secret-scanner/internal/report/secret"
 	"github.com/rs/zerolog/log"
 )
 
-var ignoredFingerprints map[string][]string
+var ignoredFingerprints map[string][]secret.Fingerprint
 
-func SetIgnoredFingerprints(fps map[string][]string) {
+func SetIgnoredFingerprints(fps map[string][]secret.Fingerprint) {
 	ignoredFingerprints = fps
 }
 
-func GetRepoIgnoredFingerprints(repository string) []string {
+func GetRepoIgnoredFingerprints(repository string) []secret.Fingerprint {
 	fps, ok := ignoredFingerprints[repository]
 	if !ok {
-		return make([]string, 0)
+		return make([]secret.Fingerprint, 0)
 	}
 	return fps
 }
@@ -37,7 +38,7 @@ func LoadIgnoredFingerprints(path string) error {
 			return err
 		}
 
-		fps := make(map[string][]string, 0)
+		fps := make(map[string][]secret.Fingerprint, 0)
 		num := 0
 
 		scanner := bufio.NewScanner(f)
@@ -49,9 +50,9 @@ func LoadIgnoredFingerprints(path string) error {
 			repository := strings.SplitN(t, ":", 4)[0]
 			_, ok := fps[repository]
 			if !ok {
-				fps[repository] = make([]string, 0)
+				fps[repository] = make([]secret.Fingerprint, 0)
 			}
-			fps[repository] = append(fps[repository], t)
+			fps[repository] = append(fps[repository], secret.Fingerprint(t))
 			num += 1
 		}
 

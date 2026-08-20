@@ -475,7 +475,7 @@ func TestSecretDiff(t *testing.T) {
 
 func TestSecretDropFingerprints(t *testing.T) {
 	set := NewSetFromSlice(testSlice)
-	fps := []string{"hardcoded_fingerprint"}
+	fps := []Fingerprint{"hardcoded_fingerprint"}
 
 	test := set.DropFingerprints(fps)
 	want := SecretSet{

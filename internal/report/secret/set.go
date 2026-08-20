@@ -1,6 +1,6 @@
 package secret
 
-type SecretSet map[string]*Secret
+type SecretSet map[Fingerprint]*Secret
 
 func NewSet() SecretSet {
 	return make(SecretSet)
@@ -61,7 +61,7 @@ func (set SecretSet) Diff(other SecretSet) SecretSet {
 	return newSet
 }
 
-func (set SecretSet) DropFingerprints(fps []string) SecretSet {
+func (set SecretSet) DropFingerprints(fps []Fingerprint) SecretSet {
 	newSet := set.Clone()
 	for _, fp := range fps {
 		delete(newSet, fp)
