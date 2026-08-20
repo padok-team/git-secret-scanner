@@ -3,7 +3,7 @@ package scm
 import (
 	"context"
 
-	"github.com/google/go-github/v82/github"
+	"github.com/google/go-github/v90/github"
 	"github.com/padok-team/git-secret-scanner/internal/scm/git"
 	"github.com/rs/zerolog/log"
 )
@@ -18,15 +18,17 @@ type GithubScm struct {
 func NewGithubScm(config *ScmConfig, token string) (*GithubScm, error) {
 	var err error
 
-	client := github.NewClient(nil).WithAuthToken(token)
+	opts := []github.ClientOptionsFunc{github.WithAuthToken(token)}
 
 	if config.Server == "" || config.Server == "github.com" {
 		config.Server = "github.com"
 	} else {
-		client, err = client.WithEnterpriseURLs("https://"+config.Server, config.Server)
-		if err != nil {
-			return nil, err
-		}
+		opts = append(opts, github.WithEnterpriseURLs("https://"+config.Server, config.Server))
+	}
+
+	client, err := github.NewClient(opts...)
+	if err != nil {
+		return nil, err
 	}
 
 	return &GithubScm{ScmConfig: config, token: token, client: client}, nil

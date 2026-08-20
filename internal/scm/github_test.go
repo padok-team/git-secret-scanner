@@ -18,7 +18,7 @@ func TestNewGithubScm(t *testing.T) {
 
 	test, err := NewGithubScm(config, "faketoken")
 
-	if !reflect.DeepEqual(test.ScmConfig, config) || test.token != "faketoken" || test.client.BaseURL.String() != "https://api.github.com/" || err != nil {
+	if !reflect.DeepEqual(test.ScmConfig, config) || test.token != "faketoken" || test.client.BaseURL() != "https://api.github.com/" || err != nil {
 		t.Fatalf(`NewGithubScm(...) = %v, %v, want {%v faketoken client}, nil`, test, err, config)
 	}
 	if config.Server != "github.com" {
@@ -28,7 +28,7 @@ func TestNewGithubScm(t *testing.T) {
 	config.Server = "test.server"
 	test, err = NewGithubScm(config, "faketoken")
 
-	if !reflect.DeepEqual(test.ScmConfig, config) || test.token != "faketoken" || test.client.BaseURL.String() != "https://test.server/api/v3/" || err != nil {
+	if !reflect.DeepEqual(test.ScmConfig, config) || test.token != "faketoken" || test.client.BaseURL() != "https://test.server/api/v3/" || err != nil {
 		t.Fatalf(`NewGithubScm(...) = %v, %v, want {%v faketoken client}, nil`, test, err, config)
 	}
 	if config.Server != "test.server" {
