@@ -99,6 +99,8 @@ github.com/xanzy/ssh-agent v0.3.3 h1:+/15pJfg/RsTxqYcX6fHqOXZwwMP+2VyYWJeWM2qQFM
 github.com/xanzy/ssh-agent v0.3.3/go.mod h1:6dzNDKs0J9rVPHPhaGCukekBHKqfl+L3KghI1Bc68Uw=
 gitlab.com/gitlab-org/api/client-go/v2 v2.58.1 h1:XMuEYGaruQ3Yu7RFGE4b1fmi//QkAPUisq9LV9jahbA=
 gitlab.com/gitlab-org/api/client-go/v2 v2.58.1/go.mod h1:tuYYHZSRj9eKea28W3uySf9bSqfkE2RknDpBdzxdnhk=
+gitlab.com/gitlab-org/api/client-go/v2 v2.58.2 h1:/4x891eadlccWl4dcf/NIN4g50fTudASfMSqfI7uWUQ=
+gitlab.com/gitlab-org/api/client-go/v2 v2.58.2/go.mod h1:tuYYHZSRj9eKea28W3uySf9bSqfkE2RknDpBdzxdnhk=
 go.yaml.in/yaml/v3 v3.0.4/go.mod h1:DhzuOOF2ATzADvBadXxruRBLzYTpT36CKvDb3+aBEFg=
 golang.org/x/crypto v0.0.0-20220622213112-05595931fe9d/go.mod h1:IxCIyHEi3zRg3s0A5j5BB6A9Jmi73HwBIUl50j+osU4=
 golang.org/x/crypto v0.55.0 h1:+KWHjbgOaAQ66dh/YlkZKHlz9ZUlq61AFirAR9ntP8M=
