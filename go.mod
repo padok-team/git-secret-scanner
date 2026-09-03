@@ -6,6 +6,7 @@ require (
 	github.com/go-git/go-git/v5 v5.19.2
 	github.com/gocarina/gocsv v0.0.0-20260628180327-50907998929c
 	github.com/google/go-github/v90 v90.0.0
+	github.com/google/go-github/v91 v91.0.0
 	github.com/rs/zerolog v1.35.1
 	github.com/spf13/cobra v1.10.2
 	gitlab.com/gitlab-org/api/client-go/v2 v2.58.1
